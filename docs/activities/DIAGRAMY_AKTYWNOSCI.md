@@ -2,11 +2,11 @@
 
 Diagramy UML opisują docelowe procesy P1 według [specyfikacji 1.0](../SPECYFIKACJA_ROOMBOOK.md), rozdziałów 3–4 i 7, [wymagań](../requirements/WYMAGANIA.md) i [scenariuszy UC](../use-cases/PRZYPADKI_UZYCIA.md). Nie potwierdzają wdrożenia funkcji biznesowych. Powiązania z planowanymi testami zawiera [macierz spójności](../requirements/MACIERZ_SPOJNOSCI.md).
 
-| AD | Źródłowe UC | WF | Scenariusz | Źródło .puml | SVG |
-| --- | --- | --- | --- | --- | --- |
-| AD-01 | UC-03 | WF-04, WF-05, WF-06 | Rezerwowanie przez studenta lub administratora w jego imieniu | [PlantUML](AD-01-rezerwowanie-sali.puml) | [Diagram](AD-01-rezerwowanie-sali.svg) |
-| AD-02 | UC-05, UC-08 | WF-08, WF-10, WF-15 | Anulowanie własne lub administracyjne | [PlantUML](AD-02-anulowanie-rezerwacji.puml) | [Diagram](AD-02-anulowanie-rezerwacji.svg) |
-| AD-03 | UC-07, UC-06 | WF-14, WF-13 | Utworzenie blokady lub dezaktywacja sali z anulowaniami | [PlantUML](AD-03-blokowanie-lub-dezaktywacja.puml) | [Diagram](AD-03-blokowanie-lub-dezaktywacja.svg) |
+| AD    | Źródłowe UC  | WF                  | Scenariusz                                                    | Źródło .puml                                       | SVG                                              |
+| ----- | ------------ | ------------------- | ------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| AD-01 | UC-03        | WF-04, WF-05, WF-06 | Rezerwowanie przez studenta lub administratora w jego imieniu | [PlantUML](AD-01-rezerwowanie-sali.puml)           | [Diagram](AD-01-rezerwowanie-sali.svg)           |
+| AD-02 | UC-05, UC-08 | WF-08, WF-10, WF-15 | Anulowanie własne lub administracyjne                         | [PlantUML](AD-02-anulowanie-rezerwacji.puml)       | [Diagram](AD-02-anulowanie-rezerwacji.svg)       |
+| AD-03 | UC-07, UC-06 | WF-14, WF-13        | Utworzenie blokady lub dezaktywacja sali z anulowaniami       | [PlantUML](AD-03-blokowanie-lub-dezaktywacja.puml) | [Diagram](AD-03-blokowanie-lub-dezaktywacja.svg) |
 
 ## AD-01 — Rezerwowanie sali
 
