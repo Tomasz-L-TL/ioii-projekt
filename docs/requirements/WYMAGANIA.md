@@ -1,0 +1,68 @@
+# RoomBook — wymagania
+
+Podstawa: [specyfikacja nadrzędna 1.0](../SPECYFIKACJA_ROOMBOOK.md), rozdziały 2–6 i 10–11. Dokument określa **wymagane zachowanie P1**, a nie stan wdrożenia. Scenariusze rozwija [opis przypadków użycia](../use-cases/PRZYPADKI_UZYCIA.md), a plan weryfikacji zawiera [macierz spójności](MACIERZ_SPOJNOSCI.md).
+
+## Cel i zakres
+
+RoomBook ma rozwiązać problem wyszukiwania wolnych uczelnianych sal do nauki i zapobiegać kolidującym rezerwacjom. Odbiorcami lokalnej aplikacji webowej są studenci i administrator uczelni. P1 obejmuje logowanie na przygotowanych kontach, listę sal, kalendarz tygodniowy, rezerwacje 45/90 minut, walidację terminów i konfliktów, własną historię i anulowanie oraz administrację salami, blokadami i rezerwacjami studentów. Interfejs ma być polski, responsywny, z motywem jasnym i ciemnym. Weryfikacja docelowa obejmuje testy reguł, API, wybrane E2E i pomiar wydajności.
+
+**P2 — wyłącznie przyszłe opcje:** powiadomienia e-mail o utworzeniu/anulowaniu rezerwacji oraz eksport CSV. Wymagają ukończenia P1 i osobnego zatwierdzenia; nie są częścią poniższych WF.
+
+Poza P1 pozostają: rejestracja, przypomnienie/reset/zmiana hasła, zarządzanie kontami w GUI, USOS/SSO, płatności, wysyłanie e-maili, integracje z kalendarzami, rezerwacje cykliczne, administracyjne zatwierdzanie rezerwacji, wyposażenie i zdjęcia sal, fizyczne usuwanie sal, hosting produkcyjny, Docker i osobna aplikacja mobilna. Konta dostarcza seed; system nie korzysta z usług zewnętrznych.
+
+## Aktorzy i pojęcia
+
+| Aktor | Wymagane uprawnienia i ograniczenia |
+| --- | --- |
+| Student | Przegląda aktywne sale i dostępność; rezerwuje dla siebie, widzi tylko własną historię i anuluje tylko własne przyszłe aktywne rezerwacje. Przy samodzielnym tworzeniu obowiązują limit 3 i horyzont +14 dni. Nie ma dostępu do operacji administracyjnych ani cudzych danych rezerwacji. |
+| Administrator | Widzi również sale nieaktywne i wszystkie rezerwacje studentów; dodaje/edytuje/aktywuje/dezaktywuje sale, zarządza blokadami, tworzy rezerwacje dla wskazanego studenta i anuluje przyszłe aktywne rezerwacje. Nie rezerwuje na konto administracyjne. Przy tworzeniu nie obowiązują go limit 3 i +14 dni; wszystkie pozostałe reguły terminu i konfliktów nadal obowiązują. |
+
+**Slot systemowy** to 60 minut zajętości. **Czas zajęć** wynosi 45 albo 90 minut; pozostała część zajętości jest **buforem**. **Aktywna rezerwacja** ma trwały status `ACTIVE`; anulowana ma `CANCELLED`. **Przyszła aktywna rezerwacja** ma ponadto początek ściśle późniejszy od aktualnej chwili w `Europe/Warsaw`. Rozpoczęcie/zakończenie jest stanem wyliczanym z czasu, bez trwałego statusu `COMPLETED`. **Blokada** wyłącza 1 lub 2 sloty sali. **Właściciel** to student, na rzecz którego dokonano rezerwacji; **inicjator** to użytkownik, który rzeczywiście ją utworzył lub anulował.
+
+## Wymagania funkcjonalne
+
+Wszystkie poniższe kryteria są docelowe. Odwołania UC wskazują scenariusze, w których zachowanie ma być obserwowalne; kontrola dostępu WF-15 obowiązuje również we wszystkich chronionych operacjach.
+
+| ID | Nazwa | Obserwowalne zachowanie | Priorytet | Kryterium akceptacji | UC |
+| --- | --- | --- | --- | --- | --- |
+| WF-01 | Logowanie i wylogowanie | System uwierzytelnia przygotowane konta i kończy sesję na żądanie. | P1 | Poprawne dane każdej roli otwierają właściwy widok; błędne dane nie logują. Po wylogowaniu chronione żądanie bez ponownego logowania jest odrzucone. | UC-01 |
+| WF-02 | Przeglądanie sal | Zakres listy zależy od roli. | P1 | Student widzi wyłącznie aktywne sale z numerem, opcjonalną nazwą i pojemnością; administrator także nieaktywne i ich status. | UC-02 |
+| WF-03 | Tygodniowy kalendarz dostępności | System pokazuje dostępność wybranej sali i tygodnia. | P1 | Kalendarz przedstawia pon.–pt. i starty 07:00–22:00 w komórkach 60 min, rozróżnia zajętość, blokadę i termin niedozwolony. Wybór 90 min wymaga 2 kolejnych wolnych dozwolonych slotów. | UC-02 |
+| WF-04 | Samodzielne rezerwowanie przez studenta | Student tworzy własną rezerwację 45/90 min. | P1 | Poprawny zapis daje `ACTIVE` i zajmuje 1/2 slotów; właścicielem i inicjatorem jest student. Próba przekroczenia 3 przyszłych aktywnych lub lokalnej daty dzisiaj+14 włącznie jest odrzucona; obowiązują przyszłość, harmonogram i reguły poniżej. | UC-03 |
+| WF-05 | Rezerwowanie w imieniu studenta | Administrator wskazuje studenta jako właściciela. | P1 | Poprawny zapis jest możliwy także przy 3 przyszłych aktywnych i dacie > +14; zapis zachowuje studenta jako właściciela i administratora jako inicjatora. Konto administratora nie może być właścicielem. Pozostałe walidacje obowiązują. | UC-03 |
+| WF-06 | Odrzucanie konfliktów | System ponownie sprawdza dostępność przy zapisie. | P1 | Konflikt sali, właściciela (także w innej sali), blokada lub nieaktywna sala powodują odmowę bez zapisu. Dwie współbieżne kolidujące próby na rzeczywistej SQLite dają co najwyżej jeden sukces. | UC-03 |
+| WF-07 | Moje rezerwacje i historia | Student przegląda wyłącznie własne rezerwacje. | P1 | Lista pokazuje datę, godzinę, długość zajęć, salę oraz stan nadchodząca/rozpoczęta/zakończona/anulowana, w tym wpisy utworzone przez administratora. Żądanie cudzej historii nie ujawnia danych. | UC-04 |
+| WF-08 | Samodzielne anulowanie | Student zwalnia własny przyszły aktywny termin. | P1 | Anulowanie zapisuje `CANCELLED`, czas, studenta jako inicjatora i `STUDENT_CANCELLED`, zachowuje historię i zwalnia zajętość. Cudza, rozpoczęta, zakończona lub już anulowana rezerwacja jest odrzucona bez zmiany. | UC-05 |
+| WF-09 | Podgląd wszystkich rezerwacji | Administrator przegląda rezerwacje studentów. | P1 | Lista obejmuje wszystkich właścicieli, salę, datę, godzinę, długość, status/stan czasowy i źródło utworzenia, w tym rzeczywistego inicjatora. | UC-08 |
+| WF-10 | Anulowanie administracyjne | Administrator anuluje przyszłą aktywną rezerwację studenta. | P1 | Zapisuje `CANCELLED`, czas, administratora jako inicjatora i `ADMIN_CANCELLED`; termin jest zwolniony, historia zachowana. Rozpoczęta, zakończona i już anulowana rezerwacja nie podlega anulowaniu. | UC-08 |
+| WF-11 | Dodawanie sal | Administrator dodaje salę. | P1 | Zapis wymaga numeru unikalnego po normalizacji białych znaków i wielkości liter oraz dodatniej całkowitej pojemności. Brak numeru, duplikat lub niepoprawna pojemność nie tworzą sali. Nazwa/opis są opcjonalne. | UC-06 |
+| WF-12 | Edytowanie sal | Administrator zmienia numer, nazwę, opis lub pojemność. | P1 | Walidacja jak przy dodaniu; poprawny zapis zachowuje tożsamość sali i powiązania wszystkich rezerwacji. Błędne dane nie zmieniają sali. | UC-06 |
+| WF-13 | Aktywacja/dezaktywacja sal | Administrator zmienia aktywność po podglądzie skutków. | P1 | Po pokazaniu liczby anulowań i potwierdzeniu dezaktywacja oraz anulowanie wszystkich przyszłych aktywnych rezerwacji sali następują atomowo (`ROOM_DEACTIVATED`, czas, inicjator). Nowe rezerwacje są zabronione; ponowna aktywacja nie odtwarza anulowanych. | UC-06 |
+| WF-14 | Zarządzanie blokadami | Administrator tworzy/usuwa blokadę 1/2-slotową. | P1 | Poprawny przyszły termin, bez kolizji z blokadą, po pokazaniu liczby anulowań i potwierdzeniu tworzy blokadę i atomowo anuluje przyszłe kolidujące rezerwacje (`TIME_BLOCKED`, czas, inicjator). Usunięcie zwalnia termin bez odtwarzania rezerwacji. Duplikat i błędny termin są odrzucone. | UC-07 |
+| WF-15 | Kontrola ról i dostępu do danych | Serwer kontroluje sesję, rolę i właściciela niezależnie od interfejsu. | P1 | Bez sesji chronione operacje są odrzucone; student nie wywoła operacji administracyjnych ani nie odczyta/zmodyfikuje cudzych rezerwacji po podmianie identyfikatora żądania. | UC-01, UC-04, UC-05, UC-06, UC-07, UC-08 |
+
+## Wymagania niefunkcjonalne
+
+| ID | Kategoria | Mierzalne kryterium docelowe | Późniejsza weryfikacja | Priorytet |
+| --- | --- | --- | --- | --- |
+| WN-01 | Ochrona poświadczeń | 0 jawnych haseł w bazie; wszystkie żądania wymagające roli mają sprawdzaną sesję i uprawnienia po stronie serwera. | TC-22: inspekcja bazy/hashowania; testy negatywne API dla braku sesji i niewłaściwej roli (uzupełniająco TC-01, TC-21). | P1 |
+| WN-02 | Wydajność | Baza ≥1000 rezerwacji, 10 równoczesnych użytkowników testowych, pomiar 10 min; ≥95% odpowiedzi przeglądania dostępności ≤2 s (p95 ≤2 s). Środowisko i wyniki zapisane. | TC-23: odtwarzalny skrypt obciążenia, dane, pomiar percentyla i raport środowiska. | P1 |
+| WN-03 | Obsługa klawiaturą | Logowanie, wybór terminu, utworzenie/anulowanie rezerwacji i podstawowe działania administratora są wykonalne wyłącznie klawiaturą; fokus widoczny na każdym elemencie interaktywnym tych ścieżek. | TC-24: przejście ścieżek obu ról bez myszy, z kontrolą fokusu. | P1 |
+| WN-04 | Zgodność przeglądarek | Kluczowe scenariusze obu ról przechodzą w aktualnych stabilnych Chrome i Firefox na komputerze. | TC-25: E2E i kontrola ręczna UC-01…08, zapis wersji obu przeglądarek i wyników. | P1 |
+| WN-05 | Responsywność i motywy | Kluczowe widoki są używalne przy 375 i 1280 px bez poziomego przewijania całej strony. Dostępne oba motywy; wybór zachowany po odświeżeniu w danej przeglądarce. | TC-26: kontrola UI-01…07 w obu szerokościach i motywach, przełączenie i odświeżenie. | P1 |
+
+## Kluczowe reguły walidacji i integralności
+
+| Reguła | Wynik przy naruszeniu / wymagany skutek |
+| --- | --- |
+| Wszystkie reguły czasu i prezentacja w `Europe/Warsaw`; pon.–pt., bez specjalnych wyjątków świątecznych. Start ściśle w przyszłości, na pełnej godzinie 07:00…22:00. | Odmowa terminu w przeszłości, już rozpoczętego, weekendowego lub poza siatką; dotyczy obu ról i tworzenia blokad. |
+| 45 min = 1×60 min, ostatni start 22:00 (zajęcia do 22:45, zajętość do 23:00). 90 min = 2×60 min, ostatni start 21:00 (zajęcia do 22:30, zajętość do 23:00). | 90 min o 22:00 odrzucone. Zajętość 90 min wynosi 120, a nie 105 minut: zajęcia + 15 min przerwy + 15 min dodatkowego bufora. |
+| Student: lokalna data ≤dzisiaj+14 włącznie; po samodzielnym zapisie maks. 3 przyszłe aktywne, licząc również utworzone przez administratora. | Dzień +15 lub czwarta przyszła aktywna powodują odmowę. Rozpoczęte, zakończone i anulowane nie wchodzą do tego limitu. Administrator tworzy bez tych dwóch limitów. |
+| Dla tej samej daty konflikt półotwartych przedziałów zajętości: `a.start < b.start + b.slots && b.start < a.start + a.slots`. | Odmowa przy kolizji aktywnych rezerwacji sali lub studenta, także między salami; blokada wyklucza rezerwację. Sąsiednie przedziały nie kolidują, anulowane nie zajmują czasu. Brak wyjątków dla administratora. |
+| Nowa rezerwacja wymaga aktywnej sali; blokady tej samej sali nie mogą się nakładać. | Odmowa rezerwacji nieaktywnej sali oraz duplikatu/nakładającej się blokady. |
+| Anulować można tylko przyszłą aktywną rezerwację, student wyłącznie własną. | Odmowa dla cudzej (student), rozpoczętej, zakończonej i już anulowanej; historia pozostaje. Zapis anulowania zawiera czas, inicjatora i odpowiednią kategorię przyczyny. |
+| Dezaktywacja i tworzenie blokady: podgląd liczby anulowań → świadome potwierdzenie → ponowne wyliczenie skutków w transakcji. | Zmiana liczby kolizji wymaga odświeżenia informacji lub bezpiecznej odmowy, bez cichego anulowania dodatkowych wpisów. Błąd oznacza wycofanie całej operacji. Rozpoczęte/zakończone pozostają bez zmian. |
+| Reaktywacja/usunięcie blokady nie cofa anulowań; edycja danych sali nie usuwa historii. | Można tworzyć nowe rezerwacje, ale stare pozostają anulowane. Nie ma automatycznego przenoszenia do innych sal. |
+| Podgląd dostępności nie gwarantuje zapisu. Pełna rewalidacja i serializacja/atomowość w SQLite obowiązują podczas zapisu. | Konflikt współbieżny, blokada bazy lub błąd przejściowy nie mogą pozostawić duplikatu ani częściowej operacji; system zwraca odpowiedni komunikat odmowy/błędu. |
+
+Rezerwacja spełniająca warunki ma być zatwierdzana od razu, bez akceptacji administracyjnej. Szczegóły protokołu sesji oraz mechanizmu podglądu/potwierdzenia pozostają do opracowania przed implementacją zgodnie z rozdziałami 3 i 8.5 specyfikacji; nie zmienia to powyższych reguł.
