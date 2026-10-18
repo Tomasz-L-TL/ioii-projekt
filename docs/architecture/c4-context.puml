@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Context>
+title RoomBook — C4 System Context (docelowy P1)
+LAYOUT_TOP_DOWN()
+skinparam nodesep 90
+skinparam ranksep 85
+skinparam Padding 12
+skinparam legendPadding 12
+Person(student, "Student", "Rezerwuje sale dla siebie i zarządza własnymi rezerwacjami.")
+Person(admin, "Administrator", "Zarządza salami, blokadami i rezerwacjami studentów.")
+System(roombook, "RoomBook", "Lokalny system rezerwacji sal. Dostępność, rezerwacje 45/90 min i historia anulowań.")
+Rel(student, roombook, "Rezerwuje sale")
+Rel(admin, roombook, "Administruje salami\ni rezerwacjami")
+SHOW_LEGEND()
+@enduml

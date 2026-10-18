@@ -2,17 +2,20 @@
 left to right direction
 skinparam shadowing false
 skinparam packageStyle rectangle
+skinparam nodesep 35
+skinparam ranksep 65
+skinparam usecasePadding 16
 actor Student as Student
 actor Administrator as Admin
 rectangle RoomBook {
   usecase "UC-01\nLogowanie do systemu" as UC01
-  usecase "UC-02\nPrzeglądanie sal i dostępności" as UC02
+  usecase "UC-02\nPrzeglądanie sal\ni dostępności" as UC02
   usecase "UC-03\nRezerwowanie sali" as UC03
-  usecase "UC-04\nPrzeglądanie własnych rezerwacji" as UC04
-  usecase "UC-05\nAnulowanie własnej rezerwacji" as UC05
+  usecase "UC-04\nPrzeglądanie\nwłasnych rezerwacji" as UC04
+  usecase "UC-05\nAnulowanie\nwłasnej rezerwacji" as UC05
   usecase "UC-06\nZarządzanie salami" as UC06
   usecase "UC-07\nZarządzanie blokadami" as UC07
-  usecase "UC-08\nZarządzanie rezerwacjami studentów" as UC08
+  usecase "UC-08\nZarządzanie rezerwacjami\nstudentów" as UC08
 }
 Student -- UC01
 Student -- UC02

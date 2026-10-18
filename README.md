@@ -6,6 +6,8 @@ Wymagania nadrzędne: [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md)
 
 Dokumentacja analityczna etapu 02: [wymagania](docs/requirements/WYMAGANIA.md), [macierz spójności](docs/requirements/MACIERZ_SPOJNOSCI.md), [osiem przypadków użycia](docs/use-cases/PRZYPADKI_UZYCIA.md) i [diagram UML (PlantUML)](docs/use-cases/diagram-przypadkow-uzycia.puml). Opisują wymagane zachowanie P1; funkcje biznesowe pozostają do implementacji.
 
+Dokumentacja etapu 03: [diagramy aktywności UML](docs/activities/DIAGRAMY_AKTYWNOSCI.md) i [architektura C4](docs/architecture/ARCHITEKTURA_C4.md).
+
 ## Technologie i środowisko
 
 - Windows 11 / PowerShell, Node.js **24 LTS**, npm **11**, Git.

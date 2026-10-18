@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+title RoomBook — C4 Container (docelowy P1)
+LAYOUT_LEFT_RIGHT()
+skinparam nodesep 65
+skinparam ranksep 75
+skinparam Padding 12
+skinparam legendPadding 12
+Person(student, "Student", "Rezerwuje sale dla siebie i zarządza własnymi rezerwacjami.")
+Person(admin, "Administrator", "Zarządza salami, blokadami i rezerwacjami studentów.")
+System_Boundary(roombook, "RoomBook — lokalny system rezerwacji sal") {
+  Container(web, "Aplikacja webowa", "React + TypeScript; Vite (budowanie / development)", "Interfejs w przeglądarce: kalendarz tygodniowy, formularze, widoki ról i komunikacja z API.")
+  Container(api, "Serwer API", "Node.js + Express + TypeScript; Prisma (biblioteka ORM)", "REST/JSON, weryfikacja sesji i roli, logika domenowa, walidacje oraz transakcje.")
+  ContainerDb(db, "Baza danych", "SQLite — lokalny plik", "Trwałe dane kont, sal, rezerwacji z historią anulowań oraz blokad.")
+}
+Rel(student, web, "Rezerwuje sale", "Interfejs przeglądarki")
+Rel(admin, web, "Administruje salami\ni rezerwacjami", "Interfejs przeglądarki")
+Rel(web, api, "REST/JSON", "Lokalny HTTP (/api)")
+Rel(api, db, "Odczyt/zapis danych", "Prisma / SQL")
+SHOW_LEGEND()
+@enduml
