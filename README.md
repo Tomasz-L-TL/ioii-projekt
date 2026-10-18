@@ -4,6 +4,8 @@ RoomBook to projekt lokalnej aplikacji webowej do przeglądania dostępności i 
 
 Wymagania nadrzędne: [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md).
 
+Dokumentacja analityczna etapu 02: [wymagania](docs/requirements/WYMAGANIA.md), [macierz spójności](docs/requirements/MACIERZ_SPOJNOSCI.md), [osiem przypadków użycia](docs/use-cases/PRZYPADKI_UZYCIA.md) i [diagram UML (PlantUML)](docs/use-cases/diagram-przypadkow-uzycia.puml). Opisują wymagane zachowanie P1; funkcje biznesowe pozostają do implementacji.
+
 ## Technologie i środowisko
 
 - Windows 11 / PowerShell, Node.js **24 LTS**, npm **11**, Git.
