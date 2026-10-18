@@ -1,0 +1,53 @@
+@startuml
+title AD-02 — Anulowanie rezerwacji\nUC-05, UC-08 | WF-08, WF-10, WF-15
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam wrapWidth 260
+|Student / Administrator|
+start
+:Wybierz rezerwację i zażądaj anulowania;
+|RoomBook|
+:Sprawdź sesję i rolę po stronie serwera;
+if (Ważna sesja STUDENT lub ADMIN?) then (tak)
+else (nie)
+  :Odmów bez modyfikacji danych;
+  stop
+endif
+:Rozpocznij transakcję;\npobierz aktualną rezerwację;
+if (Rezerwacja istnieje i właściciel to student?) then (tak)
+else (nie)
+  :Wycofaj; odmów bez modyfikacji danych;
+  stop
+endif
+if (Inicjatorem jest student?) then (tak)
+  if (Rezerwacja należy do zalogowanego studenta?) then (tak)
+    :Ustal przyczynę STUDENT_CANCELLED;
+  else (nie)
+    :Wycofaj; odmów bez ujawnienia cudzych danych\ni bez ich modyfikacji;
+    stop
+  endif
+else (administrator)
+  :Dopuść dowolną rezerwację studenta;\nustal przyczynę ADMIN_CANCELLED;
+endif
+:Sprawdź przy wykonaniu: status ACTIVE\ni początek ściśle w przyszłości\nwedług Europe/Warsaw;
+if (Oba warunki spełnione?) then (tak)
+else (nie)
+  :Wycofaj; odmów dla już anulowanej,\nrozpoczętej lub zakończonej rezerwacji;
+  stop
+endif
+:Atomowo zapisz CANCELLED, czas anulowania,\nID inicjatora i ustaloną przyczynę;\nzachowaj rekord historii; zatwierdź transakcję;
+if (Zapis zatwierdzony bez konfliktu?) then (tak)
+  :Potwierdź anulowanie;\nzwolnij zajętość i odśwież listę;
+  note right
+    CANCELLED nie zajmuje terminu.
+    Ponowne anulowanie zostanie odrzucone.
+    Zakończenie wynika z czasu;
+    brak trwałego statusu COMPLETED.
+  end note
+  stop
+else (błąd / współbieżna zmiana)
+  :Wycofaj całość; pokaż błąd;\nbez modyfikacji rezerwacji i historii;
+  stop
+endif
+@enduml

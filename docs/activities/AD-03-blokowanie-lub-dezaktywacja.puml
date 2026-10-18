@@ -1,0 +1,80 @@
+@startuml
+title AD-03 — Blokowanie terminu lub dezaktywacja sali\nUC-07, UC-06 | WF-14, WF-13
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam wrapWidth 260
+|Administrator|
+start
+:Wskaż salę i rozpocznij operację;
+|RoomBook|
+:Sprawdź sesję ADMIN i istnienie sali;
+if (Administrator uprawniony i sala istnieje?) then (tak)
+else (nie)
+  :Odmów bez zmian danych;
+  stop
+endif
+|Administrator|
+if (Rodzaj operacji?) then (utworzenie blokady)
+  :Wybierz datę, godzinę i 1 lub 2 sloty;
+  |RoomBook|
+  :Sprawdź termin blokady\ni brak nakładania z inną blokadą sali;
+  note right
+    Europe/Warsaw, pon.–pt., początek w przyszłości.
+    Pełne sloty po 60 min, start od 07:00.
+    1 slot: najpóźniej 22:00;
+    2 sloty: najpóźniej 21:00; koniec do 23:00.
+    Duplikat / nakładanie blokad = odmowa.
+  end note
+  :Ustal zbiór przyszłych ACTIVE sali\nkolidujących z całym przedziałem blokady;\nprzyczyna TIME_BLOCKED;
+else (dezaktywacja sali)
+  |RoomBook|
+  :Sprawdź, czy sala jest aktywna;
+  :Ustal zbiór wszystkich przyszłych ACTIVE sali;\nprzyczyna ROOM_DEACTIVATED;
+endif
+if (Walidacja operacji poprawna?) then (tak)
+else (nie / błąd odczytu)
+  :Odmów bez zmian danych;
+  stop
+endif
+:Pokaż rodzaj operacji i liczbę N anulowań;\nzachowaj zbiór rezerwacji objętych podglądem;
+|Administrator|
+if (Potwierdzasz operację i skutki, także N = 0?) then (tak)
+else (rezygnacja)
+  |RoomBook|
+  :Zakończ bez zmian danych;
+  stop
+endif
+|RoomBook|
+:Rozpocznij transakcję z ochroną\nprzed współbieżną zmianą skutków;
+:Ponownie sprawdź sesję ADMIN, salę\ni reguły wybranej operacji;\nponownie policz zbiór przyszłych ACTIVE;
+if (Reguły nadal spełnione?) then (tak)
+else (nie / konflikt)
+  :Wycofaj; odmów bez zmian danych;
+  stop
+endif
+if (Liczba ORAZ zestaw takie jak potwierdzone?) then (tak)
+else (nie)
+  :Wycofaj bez zmian;\nwymagaj nowego podglądu i potwierdzenia;
+  note right
+    Ponowienie zaczyna się od podglądu skutków.
+    Nie anuluj dodatkowych rekordów bez zgody.
+  end note
+  stop
+endif
+:W tej samej transakcji utwórz blokadę\nALBO ustaw isActive = false;\nanuluj cały potwierdzony zbiór;
+note right
+  Każde anulowanie: CANCELLED, czas,
+  ID administratora i ustalona przyczyna.
+  Zachowaj historię; rozpoczęte, zakończone
+  i wcześniej anulowane pozostają bez zmian.
+end note
+:Spróbuj zatwierdzić całą transakcję;
+if (Transakcja zatwierdzona?) then (tak)
+  :Potwierdź wynik; odśwież salę,\nblokady i dostępność;
+  stop
+else (błąd / współbieżny konflikt)
+  :Wycofaj całość; pokaż błąd;\nbez częściowych anulowań, blokady\nani zmiany aktywności sali;
+  stop
+endif
+@enduml

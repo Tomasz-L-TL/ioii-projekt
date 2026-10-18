@@ -1,0 +1,84 @@
+@startuml
+title AD-01 — Rezerwowanie sali\nUC-03 | WF-04, WF-05, WF-06
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam wrapWidth 260
+|Student / Administrator|
+start
+:Rozpocznij rezerwowanie;
+|RoomBook|
+if (Ważna sesja i rola STUDENT lub ADMIN?) then (tak)
+else (nie)
+  :Odmów bez utworzenia rezerwacji;
+  stop
+endif
+if (Inicjatorem jest administrator?) then (tak)
+  |Student / Administrator|
+  :Wybierz właściciela-studenta;
+  |RoomBook|
+  :Sprawdź istnienie konta STUDENT\n(konto ADMIN nie może być właścicielem);
+else (nie)
+  :Ustal właściciela z sesji studenta;
+endif
+|Student / Administrator|
+:Wybierz salę, lokalną datę,\ngodzinę i długość 45 lub 90 min;
+|RoomBook|
+:Pokaż orientacyjną dostępność\ni podsumowanie wyboru;
+note right
+  Europe/Warsaw, pon.–pt., pełne godziny.
+  45 min = 1 slot 60 min, start 07:00–22:00.
+  90 min = 2 sloty 120 min, start 07:00–21:00.
+  Bufor mieści się w zajętości systemowej.
+  Podgląd nie gwarantuje zapisu.
+end note
+|Student / Administrator|
+if (Zatwierdzasz utworzenie?) then (tak)
+else (rezygnacja)
+  |RoomBook|
+  :Zakończ bez zmian danych;
+  stop
+endif
+|RoomBook|
+:Rozpocznij transakcję zapisu\nz ochroną przed współbieżnymi kolizjami;
+:Ponownie sprawdź sesję, rolę,\nwłaściciela i reguły kalendarza;\npoczątek musi być ściśle w przyszłości;
+if (Uprawnienia, właściciel i termin poprawne?) then (tak)
+else (nie)
+  :Wycofaj transakcję;\nodmów bez utworzenia rezerwacji;
+  stop
+endif
+if (Zapis wykonuje student?) then (tak)
+  :Sprawdź lokalną datę ≤ dzisiaj + 14 włącznie\ni maks. 3 przyszłe ACTIVE po zapisie;
+  note right
+    Limit uwzględnia również wpisy administratora.
+    Rozpoczęte i anulowane nie są liczone.
+  end note
+  if (Oba limity spełnione?) then (tak)
+  else (nie)
+    :Wycofaj transakcję;\nodmów bez utworzenia rezerwacji;
+    stop
+  endif
+else (administrator)
+  :Pomiń wyłącznie limit 3 i horyzont +14 dni;
+endif
+:Ponownie sprawdź aktywność sali, blokady\ni brak kolizji ACTIVE sali ALBO właściciela\n(również w różnych salach);
+note right
+  Sprawdzaj całą zajętość 60/120 min.
+  Przedziały półotwarte [start, start + sloty).
+  Sąsiednie przedziały nie kolidują;
+  anulowane rezerwacje nie zajmują terminu.
+end note
+if (Sala aktywna i brak konfliktów?) then (tak)
+else (nie)
+  :Wycofaj transakcję;\nodmów i odśwież dostępność;
+  stop
+endif
+:Zapisz ACTIVE, właściciela-studenta\ni rzeczywistego inicjatora;\nspróbuj zatwierdzić transakcję;
+if (Transakcja zatwierdzona?) then (tak)
+  :Potwierdź rezerwację natychmiast\ni odśwież dostępność oraz listę;
+  stop
+else (konflikt / błąd / blokada bazy)
+  :Wycofaj całość; pokaż konflikt lub błąd;\nnie twórz rezerwacji ani duplikatu;
+  stop
+endif
+@enduml
