@@ -1,0 +1,62 @@
+@startuml
+title RoomBook — projekt ERD (dokładnie cztery tabele)
+hide circle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultFontName Arial
+entity users {
+  * id : INTEGER <<PK>>
+  --
+  * email : TEXT <<UNIQUE>>
+  * display_name : TEXT
+  * password_hash : TEXT
+  * role : TEXT
+}
+entity rooms {
+  * id : INTEGER <<PK>>
+  --
+  * room_number : TEXT <<UNIQUE>>
+  name : TEXT (NULL)
+  description : TEXT (NULL)
+  * capacity : INTEGER
+  * is_active : BOOLEAN
+}
+entity bookings {
+  * id : INTEGER <<PK>>
+  --
+  * student_id : INTEGER <<FK users.id>>
+  * room_id : INTEGER <<FK rooms.id>>
+  * created_by_user_id : INTEGER <<FK users.id>>
+  * date : TEXT (YYYY-MM-DD)
+  * start_hour : INTEGER
+  * duration_slots : INTEGER
+  * status : TEXT
+  * created_at : DATETIME
+  cancelled_at : DATETIME (NULL)
+  cancelled_by_user_id : INTEGER (NULL) <<FK users.id>>
+  cancel_reason : TEXT (NULL)
+}
+entity time_blocks {
+  * id : INTEGER <<PK>>
+  --
+  * room_id : INTEGER <<FK rooms.id>>
+  * date : TEXT (YYYY-MM-DD)
+  * start_hour : INTEGER
+  * duration_slots : INTEGER
+  reason : TEXT (NULL)
+  * created_by_user_id : INTEGER <<FK users.id>>
+  * created_at : DATETIME
+}
+users ||--o{ bookings : student_id (właściciel)
+users ||--o{ bookings : created_by_user_id (inicjator)
+users |o--o{ bookings : cancelled_by_user_id (anulujący)
+rooms ||--o{ bookings : room_id
+rooms ||--o{ time_blocks : room_id
+users ||--o{ time_blocks : created_by_user_id (ADMIN)
+legend bottom
+  * = NOT NULL; brak * = NULL dopuszczalne.
+  Wszystkie FK: ON DELETE RESTRICT, ON UPDATE RESTRICT.
+  Indeksy: bookings(room_id,date), bookings(student_id,date),
+  time_blocks(room_id,date). Reguły zakresów i transakcji: MODEL_DANYCH.md.
+endlegend
+@enduml

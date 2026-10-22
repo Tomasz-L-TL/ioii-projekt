@@ -2,11 +2,11 @@
 
 Podstawa: [specyfikacja 1.0](../SPECYFIKACJA_ROOMBOOK.md), rozdziały 7, 10–12. Macierz wiąże [wymagania](WYMAGANIA.md) z [formalnymi UC](../use-cases/PRZYPADKI_UZYCIA.md) i [diagramem UC](../use-cases/diagram-przypadkow-uzycia.puml).
 
-**AD-01…AD-03 istnieją jako źródła PlantUML i eksporty SVG; TC, SD i UI pozostają planowane.** Identyfikatory TC-01…TC-26 zachowują znaczenie z rozdziału 11 specyfikacji; przypisanie nie oznacza wykonania testu ani pełnego pokrycia kryterium. Kolumna braków wskazuje warianty, o które trzeba rozszerzyć planowane testy; nie nadaje nowych ID. Dodatkowe powiązania TC-13/14/15 z WF-15 dotyczą prywatności i autoryzacji, a nie zmiany zakresu testów.
+**AD-01…AD-03 istnieją jako źródła PlantUML i eksporty SVG; SD-01…03, klasy, ERD i szkic Prisma istnieją jako projekty etapu 04. TC i UI nadal pozostają planowane.** Identyfikatory TC-01…TC-26 zachowują znaczenie z rozdziału 11 specyfikacji; przypisanie nie oznacza wykonania testu ani pełnego pokrycia kryterium. Kolumna braków wskazuje warianty, o które trzeba rozszerzyć planowane testy; nie nadaje nowych ID. Dodatkowe powiązania TC-13/14/15 z WF-15 dotyczą prywatności i autoryzacji, a nie zmiany zakresu testów.
 
 ## Wymagania funkcjonalne
 
-| WF    | UC                                       | Planowane TC                                    | AD (istniejące) / SD i UI (planowane)                                                                                                    | Pokrycie minimalnego TC i uzupełnienia wymagane później                                                                                                                                                                                        |
+| WF    | UC                                       | Planowane TC                                    | AD / SD (projekty istniejące); UI (planowane)                                                                                           | Pokrycie minimalnego TC i uzupełnienia wymagane później                                                                                                                                                                                        |
 | ----- | ---------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | WF-01 | UC-01                                    | TC-01, TC-02                                    | UI-01                                                                                                                                    | Poprawne logowanie studenta, wylogowanie, błędne hasło. Uzupełnić poprawne logowanie administratora, właściwy widok roli i odmowę chronionego żądania po wylogowaniu.                                                                          |
 | WF-02 | UC-02                                    | TC-03                                           | UI-02, UI-04, UI-07                                                                                                                      | Aktywne sale studenta i pojemność. Uzupełnić numer/opcjonalną nazwę oraz widoczność nieaktywnych sal i statusu dla administratora.                                                                                                             |
@@ -36,6 +36,19 @@ Podstawa: [specyfikacja 1.0](../SPECYFIKACJA_ROOMBOOK.md), rozdziały 7, 10–12
 
 ## Granice śledzenia na etapie analizy
 
-Każde WF i WN ma plan weryfikacji, a każdy UC-01…08 jest powiązany z wymaganiem. Istniejące AD-01…03 opisano w [diagramach aktywności](../activities/DIAGRAMY_AKTYWNOSCI.md), a docelowe Context/Container w [architekturze C4](../architecture/ARCHITEKTURA_C4.md). SD-01…03, UI-01…07, diagram klas, ERD i testy biznesowe pozostają planowane. W następnych etapach należy uzupełnić odnośniki do rzeczywistych sekwencji, makiet, klas/ERD, modułów i wyników testów. Brak diagramu AD/SD przy danym WF nie oznacza dodatkowego diagramu do wykonania: zatwierdzone diagramy opisują wybrane kluczowe procesy.
+Każde WF i WN ma plan weryfikacji, a każdy UC-01…08 jest powiązany z wymaganiem. Istniejące AD-01…03 opisano w [diagramach aktywności](../activities/DIAGRAMY_AKTYWNOSCI.md), a docelowe Context/Container w [architekturze C4](../architecture/ARCHITEKTURA_C4.md). Projekty SD-01…03, klas, ERD i Prisma wskazano poniżej. UI-01…07, implementacja modeli i testy biznesowe pozostają planowane. W następnych etapach należy uzupełnić odnośniki do makiet, modułów i rzeczywistych wyników testów. Brak diagramu AD/SD przy danym WF nie oznacza dodatkowego diagramu do wykonania: zatwierdzone diagramy opisują wybrane kluczowe procesy.
+
+## Powiązania projektowe etapu 04
+
+Wspólne artefakty: [diagram klas](../classes/class-diagram.puml) / [opis klas](../classes/MODEL_KLAS.md), [ERD](../data-model/erd.puml), [szkic Prisma](../data-model/schema-plan.prisma) / [reguły danych](../data-model/MODEL_DANYCH.md). Są projektami; nie oznaczają wdrożenia klas ani tabel w aktywnym schemacie.
+
+| WF | UC | AD | SD (projekt istniejący) | Klasy usług i repozytoriów | Tabele w ERD / szkicu Prisma |
+| --- | --- | --- | --- | --- | --- |
+| WF-04/05/06 | UC-03 | AD-01 | [SD-01](../sequences/SD-01-rezerwacja.puml) | BookingService / BookingRepository; UserRepository, RoomRepository, TimeBlockRepository | bookings; users, rooms, time_blocks |
+| WF-08/15 | UC-05 | AD-02 | [SD-02](../sequences/SD-02-anulowanie.puml) | BookingService / BookingRepository; AuthService / UserRepository | bookings / users |
+| WF-14 | UC-07 | AD-03 | [SD-03](../sequences/SD-03-blokada.puml) | TimeBlockService / TimeBlockRepository + BookingRepository; RoomRepository | time_blocks / bookings; rooms, users |
+| WF-13 | UC-06 | AD-03 | Brak osobnego SD | RoomService / RoomRepository + BookingRepository | rooms / bookings; users (inicjator) |
+
+Kontrola WF-15 / WN-01 jest przekrojowa: AuthService i UserRepository występują we wszystkich trzech SD. Nota WF-10 na SD-02 opisuje wspólną politykę przyszłości, bez deklarowania osobnej pełnej sekwencji UC-08. Pozostałe UC nie otrzymują sztucznego przypisania SD.
 
 Nie deklaruje się procentowego ani pełnego pokrycia wykonanymi testami. Kontrole szkieletu technicznego nie są wynikami biznesowych TC-01…TC-26.

@@ -8,6 +8,8 @@ Dokumentacja analityczna etapu 02: [wymagania](docs/requirements/WYMAGANIA.md), 
 
 Dokumentacja etapu 03: [diagramy aktywności UML](docs/activities/DIAGRAMY_AKTYWNOSCI.md) i [architektura C4](docs/architecture/ARCHITEKTURA_C4.md).
 
+Projekty etapu 04: [model klas UML](docs/classes/MODEL_KLAS.md), [trzy sekwencje UML](docs/sequences/DIAGRAMY_SEKWENCJI.md) oraz [ERD i model danych](docs/data-model/MODEL_DANYCH.md) ze [szkicem Prisma](docs/data-model/schema-plan.prisma). Modele biznesowe pozostają do implementacji.
+
 ## Technologie i środowisko
 
 - Windows 11 / PowerShell, Node.js **24 LTS**, npm **11**, Git.
