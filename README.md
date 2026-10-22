@@ -1,54 +1,86 @@
 # RoomBook — system rezerwacji sal na uczelni
 
-RoomBook to projekt lokalnej aplikacji webowej do przeglądania dostępności i rezerwowania uczelnianych sal do nauki, rozwijany na potrzeby przedmiotu **Inżynieria Oprogramowania II**. Student będzie zarządzać własnymi rezerwacjami, a administrator salami, blokadami i rezerwacjami studentów. **Etap 05 dostarcza siedem prezentacyjnych ekranów React oraz makiety SVG. Diagnostyczne API pozostaje dostępne; funkcje biznesowe jeszcze nie istnieją.** Projekt nie wymaga hostingu ani Dockera.
+RoomBook to lokalna aplikacja rozwijana na przedmiot **Inżynieria Oprogramowania II**. **Etap 06 dostarcza rzeczywistą bazę SQLite, migrację, seed oraz logowanie, sesje i kontrolę ról w API. Frontend nadal jest demonstracyjny i nie korzysta z autentycznego logowania.** Operacje rezerwacji, sal i blokad pozostają do implementacji. Projekt nie wymaga hostingu ani Dockera.
 
-Wymagania nadrzędne: [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md).
+Podstawą jest [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md). Dokumentacja projektu:
 
-Dokumentacja analityczna etapu 02: [wymagania](docs/requirements/WYMAGANIA.md), [macierz spójności](docs/requirements/MACIERZ_SPOJNOSCI.md), [osiem przypadków użycia](docs/use-cases/PRZYPADKI_UZYCIA.md) i [diagram UML (PlantUML)](docs/use-cases/diagram-przypadkow-uzycia.puml). Opisują wymagane zachowanie P1; funkcje biznesowe pozostają do implementacji.
+- Etap 02: [wymagania](docs/requirements/WYMAGANIA.md), [macierz spójności](docs/requirements/MACIERZ_SPOJNOSCI.md), [osiem przypadków użycia](docs/use-cases/PRZYPADKI_UZYCIA.md), [diagram UC](docs/use-cases/diagram-przypadkow-uzycia.puml).
+- Etap 03: [diagramy aktywności](docs/activities/DIAGRAMY_AKTYWNOSCI.md), [architektura C4](docs/architecture/ARCHITEKTURA_C4.md).
+- Etap 04: [model klas](docs/classes/MODEL_KLAS.md), [sekwencje](docs/sequences/DIAGRAMY_SEKWENCJI.md), [ERD i model danych](docs/data-model/MODEL_DANYCH.md), [projekt Prisma](docs/data-model/schema-plan.prisma). Projekt zachowano; cztery modele aktywowano w etapie 06.
+- Etap 05: [siedem makiet SVG](docs/ui/MAKIETY.md), [nawigacja WF/UC](docs/ui/NAWIGACJA.md). Widoki `/#UI-01`…`/#UI-07` mają fikcyjne dane i stałą datę 19.10.2026, 08:00 Europe/Warsaw. Działają filtry, nawigacja i trwały motyw. Formularz logowania jest tylko do odczytu, potwierdzenia niczego nie zapisują. Integracja UI z auth należy do etapu 09.
 
-Dokumentacja etapu 03: [diagramy aktywności UML](docs/activities/DIAGRAMY_AKTYWNOSCI.md) i [architektura C4](docs/architecture/ARCHITEKTURA_C4.md).
+## Środowisko i instalacja
 
-Projekty etapu 04: [model klas UML](docs/classes/MODEL_KLAS.md), [trzy sekwencje UML](docs/sequences/DIAGRAMY_SEKWENCJI.md) oraz [ERD i model danych](docs/data-model/MODEL_DANYCH.md) ze [szkicem Prisma](docs/data-model/schema-plan.prisma). Modele biznesowe pozostają do implementacji.
-
-Etap 05: [siedem makiet SVG i opis ekranów](docs/ui/MAKIETY.md), [nawigacja i powiązania WF/UC](docs/ui/NAWIGACJA.md). Po `npm run dev` wybierz podgląd studenta lub administratora; widoki mają adresy `/#UI-01`…`/#UI-07`. Działa nawigacja, lokalne filtry i trwały jasny/ciemny motyw. Dane są jawnie fikcyjne, a czas odniesienia stały: 19.10.2026, 08:00 Europe/Warsaw. Logowanie ma pola tylko do odczytu; potwierdzenia nie zapisują danych. Sesje i integracja biznesowego API należą do etapów 06–10.
-
-## Technologie i środowisko
-
-- Windows 11 / PowerShell, Node.js **24 LTS**, npm **11**, Git.
-- React + Vite + TypeScript; Node.js + Express + TypeScript.
-- SQLite + Prisma 7.10 (konfiguracja bez modeli, migracji i danych).
-- Vitest + Supertest, Playwright (smoke test), ESLint + Prettier.
-- Jedno repozytorium npm workspaces i GitHub Actions do kontroli jakości.
-
-Wersje zależności są odtwarzane z `package-lock.json`. Polecenia poniżej wykonuje się w katalogu głównym repozytorium. Użycie `npm.cmd` i `npx.cmd` pozwala uruchamiać narzędzia bez zmieniania polityki wykonywania skryptów PowerShell; standardowe `npm` i `npx` działają, jeżeli środowisko na to pozwala.
-
-## Instalacja i uruchomienie
+Windows 11 / PowerShell, Node **24 LTS**, npm **11**. React/Vite/TypeScript i Express 5/TypeScript tworzą npm workspaces; SQLite używa Prisma **7.10.0** i adaptera better-sqlite3. Testy: Vitest/Supertest i Playwright. Wersje odtwarza `package-lock.json`. Polecenia wykonuj w katalogu głównym; `npm.cmd` omija problemy polityki skryptów PowerShell.
 
 ```powershell
 node --version
 npm.cmd --version
-git --version
 npm.cmd ci
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+# Uzupełnij tylko brakujące sekrety; skrypt ich nie wypisuje.
+@'
+import { readFileSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+let text = readFileSync('.env', 'utf8');
+for (const key of ['SESSION_SECRET', 'SEED_DEMO_PASSWORD']) {
+  if (!new RegExp('^' + key + '=.+$', 'm').test(text)) {
+    text = text.replace(new RegExp('^' + key + '=$', 'm'), '');
+    text += '\n' + key + '=' + randomBytes(32).toString('hex') + '\n';
+  }
+}
+writeFileSync('.env', text, { mode: 0o600 });
+'@ | node --input-type=module
+npm.cmd run db:validate
+npm.cmd run db:generate
+npm.cmd run db:migrate
+npm.cmd run db:seed
 npm.cmd run dev
 ```
 
-`npm run dev` uruchamia równolegle oba workspaces przez `concurrently`. Zakończenie: `Ctrl+C`.
+`dev` uruchamia oba workspaces przez concurrently; zakończenie: Ctrl+C. Frontend: <http://127.0.0.1:5173>, API: <http://127.0.0.1:3001/api/health>, proxy: <http://127.0.0.1:5173/api/health>. Health zwraca `200 {"status":"ok"}`.
 
-- Frontend: <http://127.0.0.1:5173>.
-- Diagnostyka API: <http://127.0.0.1:3001/api/health>, odpowiedź `200` i `{ "status": "ok" }`.
-- Proxy developerskie: <http://127.0.0.1:5173/api/health> przekazuje żądanie do API.
+Główny `.env` jest ładowany jawnie; zmienne procesu mają pierwszeństwo. `WEB_PORT`/`API_PORT` domyślnie wynoszą 5173/3001. Host to `127.0.0.1`; zajęty port powoduje błąd. Frontend korzysta z proxy `/api`, bez CORS. Nigdy nie umieszczaj sekretów w `VITE_*`.
 
-Porty `WEB_PORT` i `API_PORT` można ustawić w głównym `.env` (domyślnie 5173 i 3001). Zmienne środowiskowe procesu mają pierwszeństwo. Serwery nasłuchują na `127.0.0.1`; zajęty port powoduje błąd zamiast cichej zmiany adresu. Frontend używa ścieżek `/api`, dzięki czemu w środowisku developerskim nie jest potrzebny CORS. Do kodu przeglądarki Vite udostępnia tylko zmienne z prefiksem `VITE_`; nie należy umieszczać tam sekretów.
+## Baza i seed
 
-Sprawdzenie z drugiego terminala:
+CLI, klient i adapter mają wersję **7.10.0**. URL znajduje się w [prisma.config.ts](prisma.config.ts), zgodnie z [konfiguracją Prisma 7](https://www.prisma.io/docs/orm/v7/reference/prisma-config-reference). Generator `prisma-client` tworzy ESM w ignorowanym `apps/api/src/generated/prisma/`; generowanie poprzedza dev, testy, typecheck i build, również po `npm ci`. Importy `.js` są zgodne z NodeNext i zbudowanym API.
+
+`DATABASE_URL=file:./prisma/dev.db` jest rozwiązywany względem repozytorium również po buildzie i uruchomieniu z workspace. `db:migrate` i `db:deploy` wykonują `prisma migrate deploy`: stosują zapisaną migrację bez resetu danych, tworzenia kolejnych migracji i bazy cienia. `db:seed` wykonuje seed jawnie, zgodnie z Prisma 7.
+
+Migracja tworzy cztery tabele domenowe: `users`, `rooms`, `bookings`, `time_blocks`. Prisma ma dodatkową techniczną `_prisma_migrations`, SQLite własną `sqlite_sequence`; nie ma tabeli sesji. Sześć FK ma RESTRICT dla DELETE/UPDATE. Adapter jawnie włącza i sprawdza `PRAGMA foreign_keys=ON`. CHECK chronią role, statusy, powody i kompletność anulowania, dodatnią całkowitą capacity, niepusty numer oraz całkowite godziny/sloty. Indeksy (sala,data) i (student,data) wspierają odczyty.
+
+Rola właściciela rezerwacji/autora blokady, daty, przyszłość, limity i konflikty przedziałów wymagają przyszłych usług domenowych etapów 07–08. Obecna baza nie gwarantuje tych reguł; nie ma pozornego indeksu unikatowego godziny ani triggerów biznesowych. Endpointy rezerwacji, sal i blokad jeszcze nie istnieją.
+
+Seed wymaga `SEED_DEMO_PASSWORD`: minimum 12 znaków, maksimum 72 bajty UTF-8 (ograniczenie bcrypt). Generator powyżej tworzy silne losowe hasło. Własne hasło można wybrać przed pierwszym seedem, edytując ignorowany `.env`. Hasła w DB: bcrypt cost 12. Jedna transakcja dodaje brakujące 6 fikcyjnych kont i 8 aktywnych sal zgodnych ze specyfikacją, bez rezerwacji/blokad. Kolejne wywołania zachowują istniejące hasła, role, dane i aktywność sal oraz historię. Zmiana hasła w `.env` nie zmienia hasła już istniejących kont.
+
+Hasło znajdziesz w wartości `SEED_DEMO_PASSWORD` w lokalnym `.env` otwartym w edytorze. Nie wyświetlaj całego pliku ani ciasteczek w terminalu przeznaczonym do udostępnienia. Początkowo to samo wybrane hasło działa dla:
+
+- administratora: `admin@roombook.test`;
+- studentów: `anna.nowak@roombook.test`, `jan.kowalski@roombook.test`, `julia.wisniewska@roombook.test`, `piotr.zielinski@roombook.test`, `maja.lewandowska@roombook.test`.
+
+## Próba logowania przez HTTP
+
+PowerShell 7, API uruchomione w drugim terminalu:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:3001/api/health
-Invoke-RestMethod http://127.0.0.1:5173/api/health
+$credentials = Get-Credential -UserName 'anna.nowak@roombook.test' -Message 'Hasło demonstracyjne z lokalnego .env'
+$body = @{ email = $credentials.UserName; password = $credentials.GetNetworkCredential().Password } | ConvertTo-Json
+Invoke-RestMethod http://127.0.0.1:3001/api/auth/login -Method Post -ContentType 'application/json' -Body $body -SessionVariable roomBookCookies
+Remove-Variable body, credentials
+Invoke-RestMethod http://127.0.0.1:3001/api/auth/me -WebSession $roomBookCookies
+Invoke-RestMethod http://127.0.0.1:3001/api/auth/logout -Method Post -ContentType 'application/json' -Body '{}' -WebSession $roomBookCookies
+# Oczekiwane 401 po wylogowaniu, bez wypisywania nagłówków:
+Invoke-WebRequest http://127.0.0.1:3001/api/auth/me -WebSession $roomBookCookies -SkipHttpErrorCheck | Select-Object StatusCode
 ```
 
-## Budowanie i kontrola jakości
+Dla ADMIN powtórz z `admin@roombook.test`. Login/me zwracają tylko `{id,email,displayName,role}`. Nieistniejący login i złe hasło mają identyczną odmowę 401. Błędy mają format `{error:{code,message}}`, polski komunikat i status 400 (JSON/rozmiar/Content-Type), 422 (pola), 401 (sesja/poświadczenia), 403 (rola/źródło), 404 lub 500 bez szczegółów DB.
+
+Sesja: `base64url({sub,exp}).base64url(HMAC-SHA256)`, TTL 8h, tylko cookie `roombook_session`: HttpOnly, SameSite=Lax, Path=/api, Max-Age=28800. `SESSION_SECRET` to 32 losowe bajty zapisane jako 64 znaki hex; brak lub błędny sekret zatrzymuje start API, bez fallbacku. Przy `NODE_ENV=production` cookie ma Secure i wymaga HTTPS; lokalny development dopuszcza HTTP na 127.0.0.1. `requireAuth` odczytuje aktualne konto i rolę z DB, `requireRole` egzekwuje 401/403. Token zawiera tylko ID i exp. Logout usuwa cookie z identycznymi Path/SameSite/Secure; **wcześniej skopiowany token pozostaje ważny do exp**, bez serwerowego rejestru unieważnień.
+
+POST wymaga application/json, maksymalnie 4 KiB i zaufanego Origin: 127.0.0.1 ze skonfigurowanymi portami web/API. Fetch Metadata odrzuca cross-site i przeglądarkowe żądania bez Origin; klienci terminalowi bez obu nagłówków są dozwoleni. Nie ma CORS z cookies. Frontend nadal ma demonstracyjne logowanie. Sekrety nie trafiają do localStorage, URL ani logów.
+
+## Kontrola jakości
 
 ```powershell
 npm.cmd run lint
@@ -56,47 +88,36 @@ npm.cmd run typecheck
 npm.cmd run test
 npm.cmd run build
 npm.cmd run db:validate
+npm.cmd audit
 ```
 
-`test` uruchamia rzeczywisty test API Vitest/Supertest bez importowania punktu uruchomienia serwera i bez bazy danych. `build` tworzy `apps/web/dist` oraz `apps/api/dist`. Zbudowane API można uruchomić poleceniem `npm.cmd run start --workspace @roombook/api`; frontend developerski uruchamia Vite. Workflow CI wykonuje instalację z lockfile, lint, sprawdzenie typów, walidację Prisma, test API i build; nie wymaga przeglądarek ani sekretów.
+Vitest/Supertest sprawdza auth, role, cookie, błędne wejścia, migrację, FK/CHECK/indeksy, idempotencję i rollback seeda. Każda grupa integracyjna automatycznie migruje oddzielny plik SQLite w katalogu tymczasowym, używa losowego sekretu/hasła w pamięci, zamyka połączenia i usuwa pliki. Testy nie używają prywatnej lokalnej bazy ani daty makiet; Express można testować bez startowego `listen()`.
 
-Playwright zawiera smoke test RoomBook i diagnostyki API przez proxy oraz trzy krótkie testy podglądu: nawigacja/motyw, kalendarz/klawiatura i szerokości 375/1280 px w obu motywach. Przed pierwszym uruchomieniem należy pobrać Chromium (wymagany dostęp do sieci):
+`build` tworzy `apps/web/dist` i `apps/api/dist`. Start zbudowanego API: `npm.cmd run start --workspace @roombook/api`. CI instaluje lockfile, generuje klienta przed importami, sprawdza lint, typy, schemat, testy i build; nie wymaga sekretów lokalnych ani przeglądarek. Audit jest informacyjny: wcześniejsze zgłoszenia wysokiego poziomu dotyczyły drzewa Prisma CLI. Nie uruchamiaj automatycznie `audit fix --force` ani nie zmieniaj głównych wersji Prisma.
+
+Playwright zachowuje cztery testy etapu 05: health przez proxy, nawigacja/motyw, kalendarz/klawiatura i siedem ekranów przy 375/1280 px w obu motywach. Skrypt E2E tworzy osobną migrowaną bazę i sekret w pamięci, a po zakończeniu serwerów usuwa pliki. Przy dostępnym Chromium:
 
 ```powershell
-npx.cmd playwright install chromium
 npm.cmd run test:e2e
 ```
 
-Test sam uruchamia i kończy środowisko developerskie; porty muszą być wolne. Nie zastępuje przyszłych testów funkcji biznesowych ani testów Chrome/Firefox. Artefakty błędów trafiają do ignorowanego `test-results/`.
-
-Przy małej ilości miejsca na dysku systemowym można przed instalacją i testem ustawić `$env:PLAYWRIGHT_BROWSERS_PATH` na katalog na innym dysku. Tę samą wartość trzeba stosować przy obu poleceniach.
+Opcjonalna instalacja `npx.cmd playwright install chromium` wymaga sieci i osobnej decyzji. Można użyć `PLAYWRIGHT_BROWSERS_PATH` na innym dysku, zachowując tę samą wartość podczas instalacji i testów. Porty muszą być wolne. E2E demonstracyjnego UI nie zastępuje przyszłych testów funkcji biznesowych ani Chrome/Firefox. Artefakty błędów: ignorowany `test-results/`.
 
 ## Struktura i konwencje
 
-| Ścieżka                              | Odpowiedzialność                           |
-| ------------------------------------ | ------------------------------------------ |
-| `apps/web/src/`                      | Siedem ekranów demonstracyjnych React      |
-| `apps/web/vite.config.ts`            | Port frontendu i lokalne proxy API         |
-| `apps/api/src/app.ts`                | Konfiguracja Express bez `listen()`        |
-| `apps/api/src/server.ts`             | Uruchomienie serwera i zakończenie procesu |
-| `apps/api/src/routes/`               | Endpoint diagnostyczny i test Supertest    |
-| `apps/api/src/config/`               | Odczyt głównego `.env` i walidacja portu   |
-| `prisma/`, `prisma.config.ts`        | Fundament SQLite/Prisma                    |
-| `tests/e2e/`, `playwright.config.ts` | Smoke test przeglądarkowy                  |
-| `docs/`                              | Istniejąca specyfikacja nadrzędna          |
-| `.github/workflows/ci.yml`           | Kontrole jakości w GitHub Actions          |
+| Ścieżka                              | Odpowiedzialność                                              |
+| ------------------------------------ | ------------------------------------------------------------- |
+| `apps/web/src/`                      | Siedem demonstracyjnych ekranów React                         |
+| `apps/web/vite.config.ts`            | Port web i proxy API                                          |
+| `apps/api/src/app.ts`, `server.ts`   | Fabryka Express oraz uruchomienie i zamknięcie połączeń       |
+| `apps/api/src/auth/`                 | Sesja, bcrypt, normalizacja, AuthService, middleware i router |
+| `apps/api/src/db/`                   | Klient adaptera SQLite i atomowy seed                         |
+| `apps/api/src/config/`, `http/`      | Główny .env, ścieżki i bezpieczne błędy API                   |
+| `prisma/`, `prisma.config.ts`        | Aktywny model, migracja i punkt startowy seeda                |
+| `tests/e2e/`, `playwright.config.ts` | Cztery testy UI etapu 05                                      |
+| `docs/`, `.github/workflows/ci.yml`  | Dokumentacja i CI                                             |
 
-TypeScript działa w trybie `strict`. Kod używa ESM i importów względnych: API stosuje `NodeNext` oraz rozszerzenia `.js` w importach TypeScript, zgodne z wynikowym kodem Node; frontend i konfiguracje narzędzi stosują rozwiązywanie `Bundler`. Nazwy kodu są angielskie, interfejs i dokumentacja polskie. ESLint kontroluje JS/TS, a Prettier formatowanie (`npm.cmd run format`). Specyfikacja jest wyłączona z formatowania. Katalog modułów domenowych powstanie dopiero z rzeczywistą logiką w kolejnych etapach; nie ma pustych warstw.
-
-## Prisma na tym etapie
-
-CLI, klient i adapter SQLite mają zgodną wersję **7.10.0**. Zgodnie z [konfiguracją Prisma 7](https://www.prisma.io/docs/orm/v7/reference/prisma-config-reference) adres bazy jest w `prisma.config.ts`, a `schema.prisma` zawiera jedynie generator `prisma-client` i datasource `sqlite`. Główny `.env` jest ładowany jawnie; domyślny adres `file:./prisma/dev.db` jest taki sam w konfiguracji i `.env.example`. CLI jest uruchamiane z katalogu głównego. Przyszły klient będzie generowany do `apps/api/src/generated/prisma/` (ignorowany przez Git).
-
-W etapie 01 wykonuje się tylko `npm.cmd run db:validate`. Nie ma instancji klienta ani połączenia API z bazą. Generowanie klienta, `prisma migrate dev`, utworzenie bazy, integracja adaptera i seed zostaną sprawdzone po zatwierdzeniu modeli w etapach 04/06. Nie należy dodawać fikcyjnych encji, aby uruchomić te polecenia wcześniej.
-
-Ograniczenie zależności: `npm.cmd audit` podczas inicjalizacji zgłosił cztery pozycje wysokiego poziomu w drzewie Prisma CLI (`prisma`, `@prisma/config`, `deepmerge-ts`, `mysql2`). API nie używa tego CLI ani MySQL. Zgłoszenia pozostają nierozwiązane; przed integracją bazy należy ponownie sprawdzić dostępne poprawki. Nie zastosowano `npm audit fix --force`, ponieważ raport proponował zmianę głównej wersji Prisma.
-
-`.env`, SQLite wraz z plikami pomocniczymi, zależności, buildy, cache i raporty testów są ignorowane przez Git. `.env.example` zawiera wyłącznie niesekretne wartości lokalne.
+TypeScript strict, ESM; API ma NodeNext i importy `.js`, frontend używa Bundler. Kod ma angielskie nazwy, dokumentacja i interfejs są polskie. ESLint i Prettier: `npm.cmd run format`. Specyfikacja jest wyłączona z formatowania. `.env`, SQLite i pliki pomocnicze, klient generowany, zależności, buildy, cache i raporty testów są ignorowane przez Git. `.env.example` zawiera wyłącznie nazwy i niesekretne wartości.
 
 ## Zespół
 
