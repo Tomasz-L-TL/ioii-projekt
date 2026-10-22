@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1100" viewBox="0 0 1280 1100" role="img" aria-labelledby="title desc">
+  <title id="title">UI-07 — Rezerwacja w imieniu studenta</title>
+  <desc id="desc">Autorska makieta RoomBook: fikcyjne dane, projekt kontrolek i stanów, bez logowania i zapisu.</desc>
+  <g font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="1280" height="1100" rx="6" fill="#f5f6f0" stroke="#bdc9c1" />
+    <rect x="16" y="16" width="224" height="1068" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="36" y="62" font-size="29" fill="#253d35">RoomBook</text>
+    <text x="36" y="94" font-size="12" fill="#253d35">PROJEKT INTERFEJSU</text>
+    <rect x="28" y="140" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="167" font-size="16" fill="#253d35">01  Logowanie</text>
+    <rect x="28" y="191" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="218" font-size="16" fill="#253d35">04  Sale</text>
+    <rect x="28" y="242" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="269" font-size="16" fill="#253d35">05  Rezerwacje</text>
+    <rect x="28" y="293" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="320" font-size="16" fill="#253d35">06  Blokady</text>
+    <rect x="28" y="344" width="200" height="42" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="39" y="371" font-size="16" fill="#ffffff">07  Dla studenta</text>
+    <text x="36" y="570" font-size="14" fill="#253d35">Podgląd roli:</text>
+    <text x="36" y="597" font-size="18" fill="#253d35">Administrator</text>
+    <text x="36" y="1034" font-size="16" fill="#253d35">Jasny / ciemny</text>
+    <text x="264" y="48" font-size="16" fill="#253d35">Tryb demonstracyjny — bez logowania i zapisu danych</text>
+    <text x="264" y="77" font-size="14" fill="#253d35">Funkcje biznesowe nie są jeszcze dostępne.</text>
+    <text x="264" y="126" font-size="28" fill="#253d35">UI-07 · Rezerwacja w imieniu studenta</text>
+    <text x="264" y="158" font-size="14" fill="#253d35">Dane fikcyjne · zegar demo: 19.10.2026, 08:00 · Europe/Warsaw</text>
+    <text x="264" y="206" font-size="14" fill="#253d35">Właściciel — wyłącznie student</text>
+    <rect x="264" y="216" width="600" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="243" font-size="16" fill="#253d35">Student 01 (fikcyjny)</text>
+    <text x="884" y="206" font-size="14" fill="#253d35">Aktywna sala</text>
+    <rect x="884" y="216" width="354" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="896" y="243" font-size="16" fill="#253d35">A-101 · 6 miejsc</text>
+    <text x="264" y="308" font-size="14" fill="#253d35">Dzień</text>
+    <rect x="264" y="318" width="300" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="345" font-size="16" fill="#253d35">20.10.2026</text>
+    <text x="584" y="308" font-size="14" fill="#253d35">Start — pełna godzina</text>
+    <rect x="584" y="318" width="310" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="596" y="345" font-size="16" fill="#253d35">09:00</text>
+    <text x="914" y="308" font-size="14" fill="#253d35">Czas zajęć</text>
+    <rect x="914" y="318" width="324" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="926" y="345" font-size="16" fill="#253d35">90 min</text>
+    <rect x="264" y="414" width="974" height="192" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="284" y="449" font-size="22" fill="#253d35">Podsumowanie</text>
+    <text x="284" y="488" font-size="16" fill="#253d35">Właściciel: Student 01 · inicjator: Administrator demo</text>
+    <text x="284" y="529" font-size="16" fill="#253d35">A-101 · 20.10.2026 · zajęcia 09:00–10:30 (90 min)</text>
+    <text x="284" y="570" font-size="16" fill="#253d35">Zajętość 09:00–11:00 (120 min, dwa sloty).</text>
+    <rect x="264" y="637" width="974" height="102" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="665" font-size="15" fill="#253d35">Dla działania administratora: brak limitu +14 dni i 3 przyszłych rezerwacji.</text>
+    <text x="280" y="691" font-size="15" fill="#253d35">Nadal: przyszły termin, pon.–pt., harmonogram, aktywna sala i brak konfliktów</text>
+    <text x="280" y="717" font-size="15" fill="#253d35">sali, studenta i blokad. API zweryfikuje reguły dopiero w kolejnych etapach.</text>
+    <rect x="264" y="770" width="390" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="276" y="796" font-size="15" fill="#ffffff">Podgląd potwierdzenia rezerwacji</text>
+    <rect x="264" y="877" width="974" height="76" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="905" font-size="15" fill="#253d35">Projekty stanów: brak studentów/sal / konflikt terminu / brak uprawnień.</text>
+    <text x="280" y="931" font-size="15" fill="#253d35">Nie można wybrać administratora jako właściciela. Zapis niedostępny.</text>
+  </g>
+</svg>

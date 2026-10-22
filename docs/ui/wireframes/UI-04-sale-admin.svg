@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1100" viewBox="0 0 1280 1100" role="img" aria-labelledby="title desc">
+  <title id="title">UI-04 — Zarządzanie salami</title>
+  <desc id="desc">Autorska makieta RoomBook: fikcyjne dane, projekt kontrolek i stanów, bez logowania i zapisu.</desc>
+  <g font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="1280" height="1100" rx="6" fill="#f5f6f0" stroke="#bdc9c1" />
+    <rect x="16" y="16" width="224" height="1068" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="36" y="62" font-size="29" fill="#253d35">RoomBook</text>
+    <text x="36" y="94" font-size="12" fill="#253d35">PROJEKT INTERFEJSU</text>
+    <rect x="28" y="140" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="167" font-size="16" fill="#253d35">01  Logowanie</text>
+    <rect x="28" y="191" width="200" height="42" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="39" y="218" font-size="16" fill="#ffffff">04  Sale</text>
+    <rect x="28" y="242" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="269" font-size="16" fill="#253d35">05  Rezerwacje</text>
+    <rect x="28" y="293" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="320" font-size="16" fill="#253d35">06  Blokady</text>
+    <rect x="28" y="344" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="371" font-size="16" fill="#253d35">07  Dla studenta</text>
+    <text x="36" y="570" font-size="14" fill="#253d35">Podgląd roli:</text>
+    <text x="36" y="597" font-size="18" fill="#253d35">Administrator</text>
+    <text x="36" y="1034" font-size="16" fill="#253d35">Jasny / ciemny</text>
+    <text x="264" y="48" font-size="16" fill="#253d35">Tryb demonstracyjny — bez logowania i zapisu danych</text>
+    <text x="264" y="77" font-size="14" fill="#253d35">Funkcje biznesowe nie są jeszcze dostępne.</text>
+    <text x="264" y="126" font-size="28" fill="#253d35">UI-04 · Zarządzanie salami</text>
+    <text x="264" y="158" font-size="14" fill="#253d35">Dane fikcyjne · zegar demo: 19.10.2026, 08:00 · Europe/Warsaw</text>
+    <rect x="264" y="194" width="235" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="276" y="220" font-size="15" fill="#ffffff">Dodaj salę — podgląd</text>
+    <rect x="264" y="267" width="974" height="44" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="278" y="295" font-size="14" fill="#253d35">Numer / nazwa</text>
+    <text x="663" y="295" font-size="14" fill="#253d35">Miejsca</text>
+    <text x="793" y="295" font-size="14" fill="#253d35">Status</text>
+    <text x="943" y="295" font-size="14" fill="#253d35">Akcje</text>
+    <rect x="264" y="311" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="345" font-size="15" fill="#253d35">A-101 · Sala projektowa</text>
+    <text x="663" y="345" font-size="15" fill="#253d35">6</text>
+    <text x="793" y="345" font-size="15" fill="#253d35">Aktywna</text>
+    <text x="943" y="345" font-size="15" fill="#253d35">Edytuj / Dezaktywuj</text>
+    <rect x="264" y="368" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="402" font-size="15" fill="#253d35">A-102 · Sala seminaryjna</text>
+    <text x="663" y="402" font-size="15" fill="#253d35">8</text>
+    <text x="793" y="402" font-size="15" fill="#253d35">Aktywna</text>
+    <text x="943" y="402" font-size="15" fill="#253d35">Edytuj / Dezaktywuj</text>
+    <rect x="264" y="425" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="459" font-size="15" fill="#253d35">C-302 · bez nazwy</text>
+    <text x="663" y="459" font-size="15" fill="#253d35">5</text>
+    <text x="793" y="459" font-size="15" fill="#253d35">Nieaktywna</text>
+    <text x="943" y="459" font-size="15" fill="#253d35">Edytuj / Aktywuj</text>
+    <text x="264" y="526" font-size="22" fill="#253d35">Panel dodania / edycji sali</text>
+    <text x="264" y="564" font-size="14" fill="#253d35">Numer</text>
+    <rect x="264" y="574" width="235" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="601" font-size="16" fill="#253d35">A-101</text>
+    <text x="519" y="564" font-size="14" fill="#253d35">Nazwa (opcjonalna)</text>
+    <rect x="519" y="574" width="450" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="531" y="601" font-size="16" fill="#253d35">Sala projektowa</text>
+    <text x="989" y="564" font-size="14" fill="#253d35">Pojemność</text>
+    <rect x="989" y="574" width="249" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1001" y="601" font-size="16" fill="#253d35">6</text>
+    <text x="264" y="661" font-size="14" fill="#253d35">Opis (opcjonalny)</text>
+    <rect x="264" y="671" width="974" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="698" font-size="16" fill="#253d35">Miejsce na opis sali</text>
+    <rect x="264" y="766" width="974" height="102" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="794" font-size="15" fill="#253d35">Projekt dezaktywacji A-101: 1 przyszła rezerwacja do anulowania (przykład).</text>
+    <text x="280" y="820" font-size="15" fill="#253d35">Wymagane świadome potwierdzenie; historia pozostaje.</text>
+    <text x="280" y="846" font-size="15" fill="#253d35">Aktywacja nie odtwarza anulowanych. Brak fizycznego kasowania sal.</text>
+    <rect x="264" y="887" width="320" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="276" y="913" font-size="15" fill="#ffffff">Podgląd potwierdzenia</text>
+    <text x="264" y="978" font-size="16" fill="#253d35">Projekty: pusta lista / duplikat numeru / brak uprawnień.</text>
+  </g>
+</svg>

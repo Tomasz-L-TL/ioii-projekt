@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1100" viewBox="0 0 1280 1100" role="img" aria-labelledby="title desc">
+  <title id="title">UI-06 — Blokady sal</title>
+  <desc id="desc">Autorska makieta RoomBook: fikcyjne dane, projekt kontrolek i stanów, bez logowania i zapisu.</desc>
+  <g font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="1280" height="1100" rx="6" fill="#f5f6f0" stroke="#bdc9c1" />
+    <rect x="16" y="16" width="224" height="1068" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="36" y="62" font-size="29" fill="#253d35">RoomBook</text>
+    <text x="36" y="94" font-size="12" fill="#253d35">PROJEKT INTERFEJSU</text>
+    <rect x="28" y="140" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="167" font-size="16" fill="#253d35">01  Logowanie</text>
+    <rect x="28" y="191" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="218" font-size="16" fill="#253d35">04  Sale</text>
+    <rect x="28" y="242" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="269" font-size="16" fill="#253d35">05  Rezerwacje</text>
+    <rect x="28" y="293" width="200" height="42" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="39" y="320" font-size="16" fill="#ffffff">06  Blokady</text>
+    <rect x="28" y="344" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="371" font-size="16" fill="#253d35">07  Dla studenta</text>
+    <text x="36" y="570" font-size="14" fill="#253d35">Podgląd roli:</text>
+    <text x="36" y="597" font-size="18" fill="#253d35">Administrator</text>
+    <text x="36" y="1034" font-size="16" fill="#253d35">Jasny / ciemny</text>
+    <text x="264" y="48" font-size="16" fill="#253d35">Tryb demonstracyjny — bez logowania i zapisu danych</text>
+    <text x="264" y="77" font-size="14" fill="#253d35">Funkcje biznesowe nie są jeszcze dostępne.</text>
+    <text x="264" y="126" font-size="28" fill="#253d35">UI-06 · Blokady sal</text>
+    <text x="264" y="158" font-size="14" fill="#253d35">Dane fikcyjne · zegar demo: 19.10.2026, 08:00 · Europe/Warsaw</text>
+    <rect x="264" y="199" width="974" height="44" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="278" y="227" font-size="14" fill="#253d35">Sala / dzień</text>
+    <text x="568" y="227" font-size="14" fill="#253d35">Zajętość</text>
+    <text x="843" y="227" font-size="14" fill="#253d35">Powód</text>
+    <text x="1073" y="227" font-size="14" fill="#253d35">Akcja</text>
+    <rect x="264" y="243" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="277" font-size="15" fill="#253d35">A-102 · 21.10.2026</text>
+    <text x="568" y="277" font-size="15" fill="#253d35">12:00–14:00 · 2 sloty</text>
+    <text x="843" y="277" font-size="15" fill="#253d35">Prace techniczne</text>
+    <text x="1073" y="277" font-size="15" fill="#253d35">Usuń — podgląd</text>
+    <text x="264" y="375" font-size="22" fill="#253d35">Nowa blokada — projekt formularza</text>
+    <text x="264" y="419" font-size="14" fill="#253d35">Sala</text>
+    <rect x="264" y="429" width="300" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="456" font-size="16" fill="#253d35">A-101</text>
+    <text x="584" y="419" font-size="14" fill="#253d35">Dzień</text>
+    <rect x="584" y="429" width="310" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="596" y="456" font-size="16" fill="#253d35">20.10.2026</text>
+    <text x="914" y="419" font-size="14" fill="#253d35">Pełna godzina</text>
+    <rect x="914" y="429" width="324" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="926" y="456" font-size="16" fill="#253d35">09:00</text>
+    <text x="264" y="519" font-size="14" fill="#253d35">Długość</text>
+    <rect x="264" y="529" width="300" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="556" font-size="16" fill="#253d35">1 / 2 sloty (60 / 120 min)</text>
+    <text x="584" y="519" font-size="14" fill="#253d35">Powód (opcjonalny)</text>
+    <rect x="584" y="529" width="654" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="596" y="556" font-size="16" fill="#253d35">Miejsce na powód</text>
+    <rect x="264" y="627" width="974" height="102" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="655" font-size="15" fill="#253d35">Podgląd skutków: 1 przyszła rezerwacja do anulowania (scenariusz demo).</text>
+    <text x="280" y="681" font-size="15" fill="#253d35">Przed zapisem API przeliczy skutki ponownie i wykona operację atomowo.</text>
+    <text x="280" y="707" font-size="15" fill="#253d35">Usunięcie blokady nie przywraca anulowanych rezerwacji.</text>
+    <rect x="264" y="754" width="360" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="276" y="780" font-size="15" fill="#ffffff">Utwórz blokadę — tylko podgląd</text>
+    <rect x="264" y="861" width="974" height="76" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="889" font-size="15" fill="#253d35">Projekty stanów: brak blokad / konflikt z inną blokadą / brak uprawnień.</text>
+    <text x="280" y="915" font-size="15" fill="#253d35">Dwa sloty najpóźniej od 21:00. Termin musi być przyszły, pon.–pt.</text>
+  </g>
+</svg>

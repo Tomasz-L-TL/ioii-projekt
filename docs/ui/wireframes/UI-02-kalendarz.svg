@@ -1,0 +1,230 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1100" viewBox="0 0 1280 1100" role="img" aria-labelledby="title desc">
+  <title id="title">UI-02 — Kalendarz studenta</title>
+  <desc id="desc">Autorska makieta RoomBook: fikcyjne dane, projekt kontrolek i stanów, bez logowania i zapisu.</desc>
+  <g font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="1280" height="1100" rx="6" fill="#f5f6f0" stroke="#bdc9c1" />
+    <rect x="16" y="16" width="224" height="1068" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="36" y="62" font-size="29" fill="#253d35">RoomBook</text>
+    <text x="36" y="94" font-size="12" fill="#253d35">PROJEKT INTERFEJSU</text>
+    <rect x="28" y="140" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="167" font-size="16" fill="#253d35">01  Logowanie</text>
+    <rect x="28" y="191" width="200" height="42" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="39" y="218" font-size="16" fill="#ffffff">02  Kalendarz</text>
+    <rect x="28" y="242" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="269" font-size="16" fill="#253d35">03  Moje rezerwacje</text>
+    <text x="36" y="570" font-size="14" fill="#253d35">Podgląd roli:</text>
+    <text x="36" y="597" font-size="18" fill="#253d35">Student</text>
+    <text x="36" y="1034" font-size="16" fill="#253d35">Jasny / ciemny</text>
+    <text x="264" y="48" font-size="16" fill="#253d35">Tryb demonstracyjny — bez logowania i zapisu danych</text>
+    <text x="264" y="77" font-size="14" fill="#253d35">Funkcje biznesowe nie są jeszcze dostępne.</text>
+    <text x="264" y="126" font-size="28" fill="#253d35">UI-02 · Kalendarz studenta</text>
+    <text x="264" y="158" font-size="14" fill="#253d35">Dane fikcyjne · zegar demo: 19.10.2026, 08:00 · Europe/Warsaw</text>
+    <text x="264" y="199" font-size="14" fill="#253d35">Aktywna sala</text>
+    <rect x="264" y="209" width="300" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="236" font-size="16" fill="#253d35">A-101 · 6 miejsc</text>
+    <text x="584" y="199" font-size="14" fill="#253d35">Tydzień</text>
+    <rect x="584" y="209" width="330" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="596" y="236" font-size="16" fill="#253d35">19–23.10.2026</text>
+    <text x="934" y="199" font-size="14" fill="#253d35">Zajęcia / zajętość</text>
+    <rect x="934" y="209" width="304" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="946" y="236" font-size="16" fill="#253d35">90 min / 120 min</text>
+    <rect x="264" y="274" width="180" height="31" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="272" y="295" font-size="14" fill="#253d35">Wolny</text>
+    <rect x="459" y="274" width="180" height="31" rx="6" fill="#d9e4f7" stroke="#bdc9c1" />
+    <text x="467" y="295" font-size="14" fill="#253d35">Zarezerwowany</text>
+    <rect x="654" y="274" width="180" height="31" rx="6" fill="#f6ded5" stroke="#bdc9c1" />
+    <text x="662" y="295" font-size="14" fill="#253d35">Zablokowany</text>
+    <rect x="849" y="274" width="180" height="31" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="857" y="295" font-size="14" fill="#253d35">Niedozwolony</text>
+    <rect x="1044" y="274" width="180" height="31" rx="6" fill="#cbe8da" stroke="#bdc9c1" />
+    <text x="1052" y="295" font-size="14" fill="#253d35">Wybrany</text>
+    <text x="264" y="336" font-size="14" fill="#253d35">Godzina</text>
+    <text x="362" y="336" font-size="16" fill="#253d35">Pon. 19.10</text>
+    <text x="538" y="336" font-size="16" fill="#253d35">Wt. 20.10</text>
+    <text x="714" y="336" font-size="16" fill="#253d35">Śr. 21.10</text>
+    <text x="890" y="336" font-size="16" fill="#253d35">Czw. 22.10</text>
+    <text x="1066" y="336" font-size="16" fill="#253d35">Pt. 23.10</text>
+    <text x="273" y="368" font-size="14" fill="#253d35">07:00</text>
+    <rect x="350" y="347" width="169" height="29" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="356" y="367" font-size="13" fill="#253d35">Niedozwolony</text>
+    <rect x="526" y="347" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="367" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="347" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="367" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="347" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="367" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="347" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="367" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="399" font-size="14" fill="#253d35">08:00</text>
+    <rect x="350" y="378" width="169" height="29" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="356" y="398" font-size="13" fill="#253d35">Niedozwolony</text>
+    <rect x="526" y="378" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="398" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="378" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="398" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="378" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="398" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="378" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="398" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="430" font-size="14" fill="#253d35">09:00</text>
+    <rect x="350" y="409" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="429" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="409" width="169" height="29" rx="6" fill="#d9e4f7" stroke="#bdc9c1" />
+    <text x="532" y="429" font-size="13" fill="#253d35">90 min · slot 1/2</text>
+    <rect x="702" y="409" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="429" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="409" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="429" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="409" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="429" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="461" font-size="14" fill="#253d35">10:00</text>
+    <rect x="350" y="440" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="460" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="440" width="169" height="29" rx="6" fill="#d9e4f7" stroke="#bdc9c1" />
+    <text x="532" y="460" font-size="13" fill="#253d35">90 min · slot 2/2</text>
+    <rect x="702" y="440" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="460" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="440" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="460" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="440" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="460" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="492" font-size="14" fill="#253d35">11:00</text>
+    <rect x="350" y="471" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="491" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="471" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="491" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="471" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="491" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="471" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="491" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="471" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="491" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="523" font-size="14" fill="#253d35">12:00</text>
+    <rect x="350" y="502" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="522" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="502" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="522" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="502" width="169" height="29" rx="6" fill="#f6ded5" stroke="#bdc9c1" />
+    <text x="708" y="522" font-size="13" fill="#253d35">Zablokowany</text>
+    <rect x="878" y="502" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="522" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="502" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="522" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="554" font-size="14" fill="#253d35">13:00</text>
+    <rect x="350" y="533" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="553" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="533" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="553" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="533" width="169" height="29" rx="6" fill="#f6ded5" stroke="#bdc9c1" />
+    <text x="708" y="553" font-size="13" fill="#253d35">Zablokowany</text>
+    <rect x="878" y="533" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="553" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="533" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="553" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="585" font-size="14" fill="#253d35">14:00</text>
+    <rect x="350" y="564" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="584" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="564" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="584" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="564" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="584" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="564" width="169" height="29" rx="6" fill="#cbe8da" stroke="#bdc9c1" />
+    <text x="884" y="584" font-size="13" fill="#253d35">Wybór · slot 1/2</text>
+    <rect x="1054" y="564" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="584" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="616" font-size="14" fill="#253d35">15:00</text>
+    <rect x="350" y="595" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="615" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="595" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="615" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="595" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="615" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="595" width="169" height="29" rx="6" fill="#cbe8da" stroke="#bdc9c1" />
+    <text x="884" y="615" font-size="13" fill="#253d35">Wybór · slot 2/2</text>
+    <rect x="1054" y="595" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="615" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="647" font-size="14" fill="#253d35">16:00</text>
+    <rect x="350" y="626" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="646" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="626" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="646" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="626" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="646" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="626" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="646" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="626" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="646" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="678" font-size="14" fill="#253d35">17:00</text>
+    <rect x="350" y="657" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="677" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="657" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="677" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="657" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="677" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="657" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="677" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="657" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="677" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="709" font-size="14" fill="#253d35">18:00</text>
+    <rect x="350" y="688" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="708" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="688" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="708" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="688" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="708" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="688" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="708" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="688" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="708" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="740" font-size="14" fill="#253d35">19:00</text>
+    <rect x="350" y="719" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="739" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="719" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="739" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="719" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="739" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="719" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="739" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="719" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="739" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="771" font-size="14" fill="#253d35">20:00</text>
+    <rect x="350" y="750" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="770" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="750" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="770" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="750" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="770" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="750" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="770" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="750" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="770" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="802" font-size="14" fill="#253d35">21:00</text>
+    <rect x="350" y="781" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="356" y="801" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="526" y="781" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="532" y="801" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="702" y="781" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="708" y="801" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="878" y="781" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="884" y="801" font-size="13" fill="#253d35">Wolny</text>
+    <rect x="1054" y="781" width="169" height="29" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="1060" y="801" font-size="13" fill="#253d35">Wolny</text>
+    <text x="273" y="833" font-size="14" fill="#253d35">22:00</text>
+    <rect x="350" y="812" width="169" height="29" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="356" y="832" font-size="13" fill="#253d35">Niedozwolony</text>
+    <rect x="526" y="812" width="169" height="29" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="532" y="832" font-size="13" fill="#253d35">Niedozwolony</text>
+    <rect x="702" y="812" width="169" height="29" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="708" y="832" font-size="13" fill="#253d35">Niedozwolony</text>
+    <rect x="878" y="812" width="169" height="29" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="884" y="832" font-size="13" fill="#253d35">Niedozwolony</text>
+    <rect x="1054" y="812" width="169" height="29" rx="6" fill="#e5e7e6" stroke="#bdc9c1" />
+    <text x="1060" y="832" font-size="13" fill="#253d35">Niedozwolony</text>
+    <rect x="264" y="861" width="974" height="76" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="889" font-size="15" fill="#253d35">Czwartek 22.10 · A-101 · zajęcia 14:00–15:30 (90 min).</text>
+    <text x="280" y="915" font-size="15" fill="#253d35">Zajętość 14:00–16:00 (120 min, dwa sloty). 22:00 nie jest startem 90 min.</text>
+    <rect x="264" y="951" width="340" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="276" y="977" font-size="15" fill="#ffffff">Podgląd potwierdzenia rezerwacji</text>
+    <text x="264" y="1029" font-size="15" fill="#253d35">API dopiero zweryfikuje faktyczną dostępność, limit 3 i horyzont +14 dni.</text>
+  </g>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1100" viewBox="0 0 1280 1100" role="img" aria-labelledby="title desc">
+  <title id="title">UI-03 — Moje rezerwacje</title>
+  <desc id="desc">Autorska makieta RoomBook: fikcyjne dane, projekt kontrolek i stanów, bez logowania i zapisu.</desc>
+  <g font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="1280" height="1100" rx="6" fill="#f5f6f0" stroke="#bdc9c1" />
+    <rect x="16" y="16" width="224" height="1068" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="36" y="62" font-size="29" fill="#253d35">RoomBook</text>
+    <text x="36" y="94" font-size="12" fill="#253d35">PROJEKT INTERFEJSU</text>
+    <rect x="28" y="140" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="167" font-size="16" fill="#253d35">01  Logowanie</text>
+    <rect x="28" y="191" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="218" font-size="16" fill="#253d35">02  Kalendarz</text>
+    <rect x="28" y="242" width="200" height="42" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="39" y="269" font-size="16" fill="#ffffff">03  Moje rezerwacje</text>
+    <text x="36" y="570" font-size="14" fill="#253d35">Podgląd roli:</text>
+    <text x="36" y="597" font-size="18" fill="#253d35">Student</text>
+    <text x="36" y="1034" font-size="16" fill="#253d35">Jasny / ciemny</text>
+    <text x="264" y="48" font-size="16" fill="#253d35">Tryb demonstracyjny — bez logowania i zapisu danych</text>
+    <text x="264" y="77" font-size="14" fill="#253d35">Funkcje biznesowe nie są jeszcze dostępne.</text>
+    <text x="264" y="126" font-size="28" fill="#253d35">UI-03 · Moje rezerwacje</text>
+    <text x="264" y="158" font-size="14" fill="#253d35">Dane fikcyjne · zegar demo: 19.10.2026, 08:00 · Europe/Warsaw</text>
+    <rect x="264" y="194" width="230" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="276" y="220" font-size="15" fill="#ffffff">Nadchodzące</text>
+    <rect x="510" y="194" width="205" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="522" y="220" font-size="15" fill="#ffffff">Historia</text>
+    <rect x="731" y="194" width="215" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="743" y="220" font-size="15" fill="#ffffff">Anulowane</text>
+    <rect x="264" y="267" width="974" height="44" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="278" y="295" font-size="14" fill="#253d35">Data / sala</text>
+    <text x="533" y="295" font-size="14" fill="#253d35">Zajęcia</text>
+    <text x="768" y="295" font-size="14" fill="#253d35">Zajętość</text>
+    <text x="1008" y="295" font-size="14" fill="#253d35">Stan / akcja</text>
+    <rect x="264" y="311" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="345" font-size="15" fill="#253d35">20.10.2026 · A-101</text>
+    <text x="533" y="345" font-size="15" fill="#253d35">09:00–10:30 · 90 min</text>
+    <text x="768" y="345" font-size="15" fill="#253d35">09:00–11:00 · 120 min</text>
+    <text x="1008" y="345" font-size="15" fill="#253d35">Nadchodząca · Anuluj</text>
+    <rect x="264" y="368" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="402" font-size="15" fill="#253d35">16.10.2026 · B-201</text>
+    <text x="533" y="402" font-size="15" fill="#253d35">10:00–10:45 · 45 min</text>
+    <text x="768" y="402" font-size="15" fill="#253d35">10:00–11:00 · 60 min</text>
+    <text x="1008" y="402" font-size="15" fill="#253d35">Zakończona · bez akcji</text>
+    <rect x="264" y="425" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="459" font-size="15" fill="#253d35">21.10.2026 · C-302</text>
+    <text x="533" y="459" font-size="15" fill="#253d35">12:00–12:45 · 45 min</text>
+    <text x="768" y="459" font-size="15" fill="#253d35">12:00–13:00 · 60 min</text>
+    <text x="1008" y="459" font-size="15" fill="#253d35">Anulowana · historia</text>
+    <rect x="264" y="530" width="974" height="102" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="558" font-size="15" fill="#253d35">Projekt potwierdzenia: anulować własny przyszły termin A-101, 20.10?</text>
+    <text x="280" y="584" font-size="15" fill="#253d35">Zwolnienie dwóch slotów; historia zostanie zachowana w docelowym systemie.</text>
+    <text x="280" y="610" font-size="15" fill="#253d35">W podglądzie lista się nie zmieni.</text>
+    <rect x="280" y="649" width="325" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="292" y="675" font-size="15" fill="#ffffff">Potwierdź — tylko podgląd</text>
+    <rect x="264" y="749" width="974" height="102" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="777" font-size="15" fill="#253d35">Projekt odmowy: termin jest już rozpoczęty lub nie należy do Ciebie.</text>
+    <text x="280" y="803" font-size="15" fill="#253d35">Stan pusty: brak rezerwacji w wybranej kategorii.</text>
+    <text x="280" y="829" font-size="15" fill="#253d35">Projekt błędu: nie udało się odczytać rezerwacji.</text>
+  </g>
+</svg>

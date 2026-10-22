@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1100" viewBox="0 0 1280 1100" role="img" aria-labelledby="title desc">
+  <title id="title">UI-05 — Wszystkie rezerwacje</title>
+  <desc id="desc">Autorska makieta RoomBook: fikcyjne dane, projekt kontrolek i stanów, bez logowania i zapisu.</desc>
+  <g font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="1280" height="1100" rx="6" fill="#f5f6f0" stroke="#bdc9c1" />
+    <rect x="16" y="16" width="224" height="1068" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="36" y="62" font-size="29" fill="#253d35">RoomBook</text>
+    <text x="36" y="94" font-size="12" fill="#253d35">PROJEKT INTERFEJSU</text>
+    <rect x="28" y="140" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="167" font-size="16" fill="#253d35">01  Logowanie</text>
+    <rect x="28" y="191" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="218" font-size="16" fill="#253d35">04  Sale</text>
+    <rect x="28" y="242" width="200" height="42" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="39" y="269" font-size="16" fill="#ffffff">05  Rezerwacje</text>
+    <rect x="28" y="293" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="320" font-size="16" fill="#253d35">06  Blokady</text>
+    <rect x="28" y="344" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="371" font-size="16" fill="#253d35">07  Dla studenta</text>
+    <text x="36" y="570" font-size="14" fill="#253d35">Podgląd roli:</text>
+    <text x="36" y="597" font-size="18" fill="#253d35">Administrator</text>
+    <text x="36" y="1034" font-size="16" fill="#253d35">Jasny / ciemny</text>
+    <text x="264" y="48" font-size="16" fill="#253d35">Tryb demonstracyjny — bez logowania i zapisu danych</text>
+    <text x="264" y="77" font-size="14" fill="#253d35">Funkcje biznesowe nie są jeszcze dostępne.</text>
+    <text x="264" y="126" font-size="28" fill="#253d35">UI-05 · Wszystkie rezerwacje</text>
+    <text x="264" y="158" font-size="14" fill="#253d35">Dane fikcyjne · zegar demo: 19.10.2026, 08:00 · Europe/Warsaw</text>
+    <text x="264" y="199" font-size="14" fill="#253d35">Szukaj właściciela / sali</text>
+    <rect x="264" y="209" width="600" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="276" y="236" font-size="16" fill="#253d35">Student 01</text>
+    <text x="884" y="199" font-size="14" fill="#253d35">Stan</text>
+    <rect x="884" y="209" width="354" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="896" y="236" font-size="16" fill="#253d35">Wszystkie</text>
+    <rect x="264" y="294" width="974" height="44" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="278" y="322" font-size="14" fill="#253d35">Właściciel / sala</text>
+    <text x="553" y="322" font-size="14" fill="#253d35">Data / zajęcia</text>
+    <text x="838" y="322" font-size="14" fill="#253d35">Stan</text>
+    <text x="1013" y="322" font-size="14" fill="#253d35">Inicjator / akcja</text>
+    <rect x="264" y="338" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="372" font-size="15" fill="#253d35">Student 01 · A-101</text>
+    <text x="553" y="372" font-size="15" fill="#253d35">20.10 · 09:00 · 90 min</text>
+    <text x="838" y="372" font-size="15" fill="#253d35">Nadchodząca</text>
+    <text x="1013" y="372" font-size="15" fill="#253d35">Student 01 · Anuluj</text>
+    <rect x="264" y="395" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="429" font-size="15" fill="#253d35">Student 02 · B-201</text>
+    <text x="553" y="429" font-size="15" fill="#253d35">22.10 · 14:00 · 45 min</text>
+    <text x="838" y="429" font-size="15" fill="#253d35">Nadchodząca</text>
+    <text x="1013" y="429" font-size="15" fill="#253d35">Administrator · Anuluj</text>
+    <rect x="264" y="452" width="974" height="57" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="278" y="486" font-size="15" fill="#253d35">Student 01 · C-302</text>
+    <text x="553" y="486" font-size="15" fill="#253d35">21.10 · 12:00 · 45 min</text>
+    <text x="838" y="486" font-size="15" fill="#253d35">Anulowana</text>
+    <text x="1013" y="486" font-size="15" fill="#253d35">Student 01 · Historia</text>
+    <rect x="264" y="558" width="974" height="102" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="586" font-size="15" fill="#253d35">Historia anulowania — przykład: 18.10.2026, 12:00 Europe/Warsaw.</text>
+    <text x="280" y="612" font-size="15" fill="#253d35">Inicjator anulowania: Administrator demo. Powód: dezaktywacja sali.</text>
+    <text x="280" y="638" font-size="15" fill="#253d35">Zajętość: 60 min dla 45 min zajęć; 120 min dla 90 min zajęć.</text>
+    <rect x="264" y="711" width="974" height="76" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="739" font-size="15" fill="#253d35">Projekt potwierdzenia: anulować przyszłą aktywną rezerwację studenta?</text>
+    <text x="280" y="765" font-size="15" fill="#253d35">Rozpoczęta / zakończona / już anulowana: brak akcji anulowania.</text>
+    <rect x="264" y="823" width="320" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="276" y="849" font-size="15" fill="#ffffff">Potwierdź — tylko podgląd</text>
+    <text x="264" y="939" font-size="16" fill="#253d35">Projekty: brak wyników / błąd odczytu / brak uprawnień.</text>
+  </g>
+</svg>

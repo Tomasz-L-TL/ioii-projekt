@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1100" viewBox="0 0 1280 1100" role="img" aria-labelledby="title desc">
+  <title id="title">UI-01 — Logowanie</title>
+  <desc id="desc">Autorska makieta RoomBook: fikcyjne dane, projekt kontrolek i stanów, bez logowania i zapisu.</desc>
+  <g font-family="Arial, sans-serif">
+    <rect x="0" y="0" width="1280" height="1100" rx="6" fill="#f5f6f0" stroke="#bdc9c1" />
+    <rect x="16" y="16" width="224" height="1068" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="36" y="62" font-size="29" fill="#253d35">RoomBook</text>
+    <text x="36" y="94" font-size="12" fill="#253d35">PROJEKT INTERFEJSU</text>
+    <rect x="28" y="140" width="200" height="42" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="39" y="167" font-size="16" fill="#ffffff">01  Logowanie</text>
+    <rect x="28" y="191" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="218" font-size="16" fill="#253d35">02  Kalendarz</text>
+    <rect x="28" y="242" width="200" height="42" rx="6" fill="#e3ece6" stroke="#bdc9c1" />
+    <text x="39" y="269" font-size="16" fill="#253d35">03  Moje rezerwacje</text>
+    <text x="36" y="570" font-size="14" fill="#253d35">Podgląd roli:</text>
+    <text x="36" y="597" font-size="18" fill="#253d35">Student</text>
+    <text x="36" y="1034" font-size="16" fill="#253d35">Jasny / ciemny</text>
+    <text x="264" y="48" font-size="16" fill="#253d35">Tryb demonstracyjny — bez logowania i zapisu danych</text>
+    <text x="264" y="77" font-size="14" fill="#253d35">Funkcje biznesowe nie są jeszcze dostępne.</text>
+    <text x="264" y="126" font-size="28" fill="#253d35">UI-01 · Logowanie</text>
+    <text x="264" y="158" font-size="14" fill="#253d35">Dane fikcyjne · zegar demo: 19.10.2026, 08:00 · Europe/Warsaw</text>
+    <rect x="420" y="205" width="650" height="555" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="456" y="254" font-size="26" fill="#253d35">Twoja przestrzeń do nauki</text>
+    <text x="456" y="291" font-size="16" fill="#253d35">Projekt formularza. Nie wpisuj prawdziwych poświadczeń.</text>
+    <text x="456" y="339" font-size="14" fill="#253d35">Login / e-mail</text>
+    <rect x="456" y="349" width="566" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="468" y="376" font-size="16" fill="#253d35">Pole tylko do odczytu w podglądzie</text>
+    <text x="456" y="438" font-size="14" fill="#253d35">Hasło</text>
+    <rect x="456" y="448" width="566" height="42" rx="6" fill="#ffffff" stroke="#bdc9c1" />
+    <text x="468" y="475" font-size="16" fill="#253d35">Pole tylko do odczytu w podglądzie</text>
+    <rect x="456" y="519" width="566" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="468" y="545" font-size="15" fill="#ffffff">Zaloguj — podgląd</text>
+    <text x="456" y="599" font-size="16" fill="#8b352b">Projekt błędu: Niepoprawny login lub hasło.</text>
+    <text x="456" y="642" font-size="16" fill="#253d35">Nie ma rejestracji ani resetu hasła.</text>
+    <rect x="456" y="683" width="266" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="468" y="709" font-size="15" fill="#ffffff">Podgląd studenta</text>
+    <rect x="738" y="683" width="284" height="40" rx="6" fill="#205c49" stroke="#bdc9c1" />
+    <text x="750" y="709" font-size="15" fill="#ffffff">Podgląd administratora</text>
+    <rect x="264" y="818" width="974" height="76" rx="6" fill="#f2e9cc" stroke="#bdc9c1" />
+    <text x="280" y="846" font-size="15" fill="#253d35">Logowanie nie ustanawia sesji. Przyciski otwierają wyłącznie podgląd.</text>
+    <text x="280" y="872" font-size="15" fill="#253d35">Docelowo: odmowa dostępu bez sesji; uprawnienia sprawdza API.</text>
+  </g>
+</svg>
