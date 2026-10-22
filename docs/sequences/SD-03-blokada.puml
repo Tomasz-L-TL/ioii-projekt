@@ -1,0 +1,135 @@
+@startuml
+title SD-03 — Blokada z potwierdzeniem skutków\nUC-07 | WF-14 | AD-03 (wariant blokady)
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam maxMessageSize 70
+autonumber
+actor Administrator as Admin
+boundary "Przeglądarka" as Web
+boundary "API (Express)" as API
+participant AuthService as Auth
+participant UserRepository as Users
+participant TimeBlockService as Service
+participant RoomRepository as Rooms
+participant TimeBlockRepository as Blocks
+participant BookingRepository as Bookings
+database SQLite as DB
+
+Admin -> Web : Wybierz salę, termin 1/2 sloty, reason
+Web -> API : POST /api/admin/blocks (mode=preview, input)
+API -> Auth : authenticate(sessionToken)
+Auth -> Users : findById(sessionUserId, null)
+Users -> DB : SELECT users
+Users --> Auth : User | null
+Auth --> API : actor lub błąd
+alt brak sesji / rola inna niż ADMIN
+  API --> Web : 401 / 403; bez zmian
+else ADMIN
+  API -> Service : previewBlock(actor, input)
+  Service -> Rooms : findById(input.roomId, null)
+  Rooms -> DB : SELECT rooms
+  Rooms --> Service : room | null
+  Service -> Blocks : findOverlapping(input.roomId, input.date, input.startHour, input.durationSlots, null)
+  Blocks -> DB : SELECT nakładające się time_blocks
+  Blocks --> Service : blokady
+  note over Service
+    Walidacja: sala istnieje; Europe/Warsaw, pon.–pt.,
+    pełne starty 7…22, sloty 1/2, koniec ≤23, start > now.
+    Ostatni start 22/21. Duplikat/nakładanie blokad zabronione.
+    Błąd danych: 400/422; brak sali: 404; konflikt: 409;
+    błąd odczytu: 500. Każda odmowa kończy próbę bez zmian.
+  end note
+  alt błędne dane / brak sali / kolizja blokad / błąd odczytu
+    Service --> API : 400/422 / 404 / 409 / 500
+    API --> Web : odmowa podglądu, bez zmian
+  else podgląd może być utworzony
+    Service -> Bookings : findFutureForRoom(input.roomId, window, now, null)
+    Bookings -> DB : SELECT ACTIVE, początek > now, sala/data i nakładanie
+    Bookings --> Service : affectedBookings
+    Service --> API : ImpactPreview(count, confirmationToken)
+    API --> Web : 200: liczba N, podsumowanie i token
+    Web --> Admin : Pokaż N anulowań i termin (również N=0)
+    note over Service, API
+      Token podpisany przez API wiąże admina, input, N i posortowane ID
+      podglądu; nie jest tabelą ani nową sesją. Zmiana input unieważnia token.
+      Podgląd bez zapisów; jego wynik jest orientacyjny.
+    end note
+    alt administrator rezygnuje
+      Admin -> Web : Wróć bez potwierdzenia
+      note over Web : Koniec bez zapisu.
+    else świadomie potwierdza N i operację
+      Admin -> Web : Potwierdź skutki
+      Web -> API : POST /api/admin/blocks (mode=confirm, input, confirmationToken)
+      API -> Auth : authenticate(sessionToken)
+      Auth -> Users : findById(sessionUserId, null)
+      Users -> DB : SELECT users
+      Users --> Auth : User | null
+      Auth --> API : actor lub błąd
+      alt brak sesji / rola inna niż ADMIN
+        API --> Web : 401 / 403; bez zmian
+      else ADMIN
+        API -> Service : createBlock(actor, input, confirmationToken)
+        activate Service
+        break błędny token / powiązanie
+          Service --> API : 400/403, bez zapisu
+          API --> Web : odmowa potwierdzenia
+        end
+        critical jedna serializowana transakcja zapisu
+          Service -> DB : BEGIN IMMEDIATE → tx
+          note over Service, DB
+            Brak tx: 409 i pominięcie reszty bloku, bez zmian.
+            Jeden wspólny tx dla odczytów, INSERT i wszystkich UPDATE.
+          end note
+          Service -> Users : findById(actor.id, tx)
+          Users -> DB : SELECT users
+          Users --> Service : aktualna rola inicjatora
+          Service -> Rooms : findById(input.roomId, tx)
+          Rooms -> DB : SELECT rooms
+          Rooms --> Service : room | null
+          Service -> Blocks : findOverlapping(input.roomId, input.date, input.startHour, input.durationSlots, tx)
+          Blocks -> DB : SELECT nakładające się time_blocks
+          Blocks --> Service : blokady
+          Service -> Bookings : findFutureForRoom(input.roomId, window, now, tx)
+          Bookings -> DB : SELECT przyszłe ACTIVE sali nakładające się na window
+          Bookings --> Service : aktualny zbiór affectedBookings
+          note over Service
+            Rewaliduj uprawnienia i termin względem now pobranego po BEGIN.
+            Porównaj liczbę ORAZ ID z podpisanym podglądem (AD-03).
+            Tylko ta sala i przedział; rozpoczęte i historia poza zbiorem.
+          end note
+          alt brak ADMIN / sali / termin niepoprawny / kolizja blokad
+            Service -> DB : ROLLBACK
+            Service --> API : 403 / 404 / 422 / 409
+          else inna liczba LUB zestaw ID
+            Service -> DB : ROLLBACK
+            Service --> API : 409 PREVIEW_CHANGED; wymagany nowy podgląd i zgoda
+          else komplet reguł spełniony i skutki zgodne
+            Service -> Blocks : insert(data, tx)
+            note right of Blocks
+              data: roomId, date, startHour, durationSlots,
+              reason, createdByUserId=actor.id, createdAt=now.
+            end note
+            Blocks -> DB : INSERT time_blocks
+            Blocks --> Service : timeBlock lub błąd
+            opt INSERT udany (w przeciwnym razie od razu rollback)
+              Service -> Bookings : cancelMany(affectedIds, actor.id, TIME_BLOCKED, now, tx)
+              Bookings -> DB : UPDATE tylko affectedIds: CANCELLED i pełne metadane
+              Bookings --> Service : changedCount lub błąd
+            end
+            alt oba zapisy udane, changedCount=N i COMMIT udany
+              Service -> DB : COMMIT
+              Service --> API : timeBlock
+            else dowolny błąd / niezgodny changedCount / błąd COMMIT
+              Service -> DB : ROLLBACK całej operacji
+              Service --> API : 409 współbieżność / 500 inny błąd
+            end
+          end
+        end
+        deactivate Service
+        API --> Web : 201 timeBlock / wskazana odmowa bez częściowych skutków
+      end
+      Web --> Admin : Wynik; odśwież blokady i dostępność
+    end
+  end
+end
+@enduml

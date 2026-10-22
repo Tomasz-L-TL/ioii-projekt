@@ -1,0 +1,110 @@
+@startuml
+title SD-01 — Rezerwowanie sali\nUC-03 | WF-04/05/06 | AD-01
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam maxMessageSize 70
+autonumber
+actor "Student / Administrator" as Actor
+boundary "Przeglądarka" as Web
+boundary "API (Express)" as API
+participant AuthService as Auth
+participant BookingService as Service
+participant UserRepository as Users
+participant RoomRepository as Rooms
+participant BookingRepository as Bookings
+participant TimeBlockRepository as Blocks
+database SQLite as DB
+
+Actor -> Web : Zatwierdź termin i właściciela
+note over Actor, Web
+  Podgląd jest orientacyjny. Student rezerwuje dla siebie;
+  administrator wskazuje konkretne konto STUDENT.
+end note
+Web -> API : POST /api/bookings (input, cookie)
+API -> Auth : authenticate(sessionToken)
+Auth -> Users : findById(sessionUserId, null)
+Users -> DB : SELECT users
+DB --> Users : konto lub brak
+Users --> Auth : User | null
+Auth --> API : actor lub błąd sesji
+alt brak ważnej sesji / niedozwolona rola
+  API --> Web : 401 / 403; bez zapisu
+else dostęp poprawny
+  API -> Service : createBooking(actor, input)
+  activate Service
+  note right of Service
+    Ustal studentId z sesji lub wyboru admina.
+    date = lokalne YYYY-MM-DD, Europe/Warsaw;
+    45/90 min → durationSlots = 1/2.
+    Niepoprawny format żądania: 400, bez transakcji.
+  end note
+  critical jedna serializowana transakcja zapisu
+    Service -> DB : BEGIN IMMEDIATE → tx
+    note over Service, DB
+      Blokada zapisu PRZED odczytami; wszystkie repozytoria
+      używają tego samego połączenia tx. Błąd BEGIN → 409,
+      bez odczytów/zapisów; pozostały blok tylko po uzyskaniu tx.
+    end note
+    Service -> Users : findById(actor.id, tx)
+    Users -> DB : SELECT users (inicjator)
+    Users --> Service : bieżący inicjator
+    Service -> Users : findById(studentId, tx)
+    Users -> DB : SELECT users (właściciel)
+    Users --> Service : student lub brak
+    Service -> Rooms : findById(input.roomId, tx)
+    Rooms -> DB : SELECT rooms
+    Rooms --> Service : room lub brak
+    note over Service
+      Rewaliduj rolę, właściciela STUDENT i termin przy aktualnym now.
+      Pon.–pt.; start całkowity 7…22, sloty 1/2, koniec ≤23;
+      start ściśle > now w Warszawie (ostatni start 22/21).
+      STUDENT: data ≤ dzisiaj+14 włącznie; ADMIN pomija tylko
+      horyzont i limit liczby. Student nie podmienia studentId.
+    end note
+    opt inicjator STUDENT
+      Service -> Bookings : countFutureActive(studentId, now, tx)
+      Bookings -> DB : COUNT ACTIVE z początkiem > now (także wpisy admina)
+      Bookings --> Service : count; wymagane count < 3
+    end
+    Service -> Bookings : findOverlapping(input.roomId, studentId, input.date, input.startHour, input.durationSlots, tx)
+    Bookings -> DB : SELECT ACTIVE: ta sama data AND (sala OR student)
+    Bookings --> Service : kolidujące rezerwacje
+    Service -> Blocks : findOverlapping(input.roomId, input.date, input.startHour, input.durationSlots, tx)
+    Blocks -> DB : SELECT time_blocks: sala i data, nakładanie
+    Blocks --> Service : kolidujące blokady
+    note over Bookings, Blocks
+      Półotwarte [start, start+sloty): a.start < b.end AND b.start < a.end.
+      Konflikt studenta obejmuje różne sale. Sam UNIQUE startu nie wystarcza.
+    end note
+    alt brak uprawnień po rewalidacji
+      Service -> DB : ROLLBACK
+      Service --> API : odmowa 403
+    else błędne dane / właściciel / harmonogram / horyzont / limit
+      Service -> DB : ROLLBACK
+      Service --> API : walidacja 422 (brak sali: 404)
+    else nieaktywna sala / kolizja rezerwacji lub blokady
+      Service -> DB : ROLLBACK
+      Service --> API : konflikt 409
+    else wszystkie warunki spełnione
+      Service -> Bookings : insert(data, tx)
+      note right of Bookings
+        data: studentId, roomId, createdByUserId=actor.id,
+        date, startHour, durationSlots, ACTIVE, createdAt=now;
+        pola anulowania = null.
+      end note
+      Bookings -> DB : INSERT bookings
+      Bookings --> Service : booking lub błąd
+      alt INSERT i COMMIT udane
+        Service -> DB : COMMIT
+        Service --> API : booking
+      else błąd zapisu / zatwierdzenia
+        Service -> DB : ROLLBACK całej operacji
+        Service --> API : 409 współbieżność / 500 inny błąd
+      end
+    end
+  end
+  deactivate Service
+  API --> Web : 201 booking / wskazany błąd; odmowa bez nowego rekordu
+end
+Web --> Actor : Wynik i odświeżona dostępność
+@enduml

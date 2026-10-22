@@ -1,0 +1,76 @@
+@startuml
+title SD-02 — Student anuluje własną rezerwację\nUC-05 | WF-08/15 | AD-02
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam maxMessageSize 70
+autonumber
+actor Student
+boundary "Przeglądarka" as Web
+boundary "API (Express)" as API
+participant AuthService as Auth
+participant UserRepository as Users
+participant BookingService as Service
+participant BookingRepository as Bookings
+database SQLite as DB
+
+Student -> Web : Anuluj wskazaną rezerwację
+Web -> API : POST /api/bookings/:id/cancel (cookie)
+API -> Auth : authenticate(sessionToken)
+Auth -> Users : findById(sessionUserId, null)
+Users -> DB : SELECT users
+Users --> Auth : User | null
+Auth --> API : actor lub błąd sesji
+alt brak sesji / niedozwolona rola
+  API --> Web : 401 / 403; bez zmian
+else ważna sesja STUDENT
+  API -> Service : cancelBooking(actor, bookingId)
+  activate Service
+  critical jedna serializowana transakcja zapisu
+    Service -> DB : BEGIN IMMEDIATE → tx
+    note over Service, DB
+      Nieuzyskanie tx: 409 bez zmian i pominięcie reszty bloku.
+      Aktualne now po uzyskaniu blokady; początek w Europe/Warsaw.
+    end note
+    Service -> Users : findById(actor.id, tx)
+    Users -> DB : SELECT users
+    Users --> Service : bieżący inicjator
+    Service -> Bookings : findById(bookingId, tx)
+    Bookings -> DB : SELECT bookings
+    Bookings --> Service : booking | null
+    alt sesja/rola nie uprawnia już do operacji
+      Service -> DB : ROLLBACK
+      Service --> API : 403
+    else brak rekordu lub booking.studentId != actor.id
+      Service -> DB : ROLLBACK
+      Service --> API : 404 (bez ujawnienia cudzych danych)
+    else status CANCELLED
+      Service -> DB : ROLLBACK
+      Service --> API : 409 już anulowana
+    else początek <= now (rozpoczęta / zakończona)
+      Service -> DB : ROLLBACK
+      Service --> API : 422 termin nie jest przyszły
+    else własna ACTIVE z początkiem > now
+      Service -> Bookings : cancelMany([bookingId], actor.id, STUDENT_CANCELLED, now, tx)
+      Bookings -> DB : UPDATE status=CANCELLED, cancel_reason, cancelled_at, cancelled_by_user_id
+      Bookings --> Service : changedCount lub błąd
+      alt changedCount = 1 i COMMIT udany
+        Service -> DB : COMMIT
+        Service --> API : booking z metadanymi anulowania
+      else nieoczekiwana liczba / błąd zapisu lub COMMIT
+        Service -> DB : ROLLBACK
+        Service --> API : 409 współbieżność / 500 inny błąd
+      end
+    end
+  end
+  deactivate Service
+  API --> Web : 200 booking / wskazany błąd
+end
+Web --> Student : Wynik; odśwież listę i dostępność
+note over Service, Bookings
+  Rekord pozostaje w historii; CANCELLED nie zajmuje terminu.
+  Brak trwałego COMPLETED. WF-10 / UC-08: ta sama polityka
+  przyszłości dla ADMIN, bez kontroli własności; ADMIN_CANCELLED.
+  cancelBooking zwraca zaktualizowany obiekt ze znanego rekordu
+  i metadanych po udanym zapisie (nie wymaga dodatkowego SELECT).
+end note
+@enduml
