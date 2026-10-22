@@ -1,0 +1,124 @@
+@startuml
+title RoomBook — projekt klas backendu API (etap 04)
+left to right direction
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+hide empty members
+
+package Domain {
+  class User {
+    +id: number
+    +email: string
+    +displayName: string
+    +passwordHash: string
+    +role: Role
+  }
+  class Room {
+    +id: number
+    +roomNumber: string
+    +name: string | null
+    +description: string | null
+    +capacity: number
+    +isActive: boolean
+  }
+  class Booking {
+    +id: number
+    +studentId: number
+    +roomId: number
+    +createdByUserId: number
+    +date: LocalDate
+    +startHour: number
+    +durationSlots: Slots
+    +status: BookingStatus
+    +createdAt: Date
+    +cancelledAt: Date | null
+    +cancelledByUserId: number | null
+    +cancelReason: CancelReason | null
+  }
+  class TimeBlock {
+    +id: number
+    +roomId: number
+    +date: LocalDate
+    +startHour: number
+    +durationSlots: Slots
+    +reason: string | null
+    +createdByUserId: number
+    +createdAt: Date
+  }
+  User "1" -- "0..*" Booking : student / właściciel
+  User "1" -- "0..*" Booking : createdBy / inicjator utworzenia
+  User "0..1" -- "0..*" Booking : cancelledBy / inicjator anulowania
+  Room "1" -- "0..*" Booking : room
+  Room "1" -- "0..*" TimeBlock : room
+  User "1" -- "0..*" TimeBlock : createdBy / administrator
+}
+
+package Services {
+  class AuthService {
+    +authenticate(sessionToken: string | null): Promise<User>
+  }
+  class RoomService {
+    +previewDeactivation(actor: User, roomId: number): Promise<ImpactPreview>
+    +deactivate(actor: User, roomId: number, confirmationToken: string): Promise<Room>
+  }
+  class BookingService {
+    +createBooking(actor: User, input: BookingInput): Promise<Booking>
+    +cancelBooking(actor: User, bookingId: number): Promise<Booking>
+  }
+  class TimeBlockService {
+    +previewBlock(actor: User, input: BlockInput): Promise<ImpactPreview>
+    +createBlock(actor: User, input: BlockInput, confirmationToken: string): Promise<TimeBlock>
+  }
+}
+
+package Repositories {
+  class UserRepository {
+    +findById(id: number, tx: Tx | null): Promise<User | null>
+  }
+  class RoomRepository {
+    +findById(id: number, tx: Tx | null): Promise<Room | null>
+    +setActive(id: number, isActive: boolean, tx: Tx): Promise<Room>
+  }
+  class BookingRepository {
+    +findById(id: number, tx: Tx): Promise<Booking | null>
+    +countFutureActive(studentId: number, now: Date, tx: Tx): Promise<number>
+    +findOverlapping(roomId: number, studentId: number, date: LocalDate, startHour: number, durationSlots: Slots, tx: Tx): Promise<Booking[]>
+    +findFutureForRoom(roomId: number, window: SlotWindow | null, now: Date, tx: Tx | null): Promise<Booking[]>
+    +insert(data: NewBooking, tx: Tx): Promise<Booking>
+    +cancelMany(ids: number[], actorId: number, reason: CancelReason, now: Date, tx: Tx): Promise<number>
+  }
+  class TimeBlockRepository {
+    +findOverlapping(roomId: number, date: LocalDate, startHour: number, durationSlots: Slots, tx: Tx | null): Promise<TimeBlock[]>
+    +insert(data: NewTimeBlock, tx: Tx): Promise<TimeBlock>
+  }
+}
+
+AuthService ..> UserRepository : odczyt konta sesji
+BookingService ..> UserRepository
+BookingService ..> RoomRepository
+BookingService ..> BookingRepository
+BookingService ..> TimeBlockRepository
+RoomService ..> RoomRepository
+RoomService ..> BookingRepository
+TimeBlockService ..> RoomRepository
+TimeBlockService ..> TimeBlockRepository
+TimeBlockService ..> BookingRepository
+UserRepository ..> User : odczytuje
+RoomRepository ..> Room : odczytuje / aktualizuje
+BookingRepository ..> Booking : odczytuje / zapisuje
+TimeBlockRepository ..> TimeBlock : odczytuje / zapisuje
+
+note bottom of BookingService
+  API kontroluje sesję i rolę; usługi egzekwują politykę operacji.
+  Jedna transakcja zapisu SQLite: BEGIN IMMEDIATE przed odczytami,
+  wspólny tx dla wszystkich repozytoriów, jeden COMMIT lub ROLLBACK.
+  Tx jest uchwytem połączenia, a DTO i aliasy opisuje MODEL_KLAS.md.
+  Są to typy danych, nie dodatkowe klasy ani tabele.
+end note
+note bottom of Booking
+  LocalDate = lokalne YYYY-MM-DD w Europe/Warsaw.
+  Slots = 1 | 2; trwały status ACTIVE | CANCELLED.
+  Brak dziedziczenia, kompozycji i kasowania historii kaskadą.
+end note
+@enduml
