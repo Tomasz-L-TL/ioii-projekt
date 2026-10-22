@@ -1,6 +1,6 @@
 # RoomBook — system rezerwacji sal na uczelni
 
-RoomBook to projekt lokalnej aplikacji webowej do przeglądania dostępności i rezerwowania uczelnianych sal do nauki, rozwijany na potrzeby przedmiotu **Inżynieria Oprogramowania II**. Student będzie zarządzać własnymi rezerwacjami, a administrator salami, blokadami i rezerwacjami studentów. **Etap 01 dostarcza wyłącznie szkielet technologiczny: stronę startową oraz diagnostyczne API. Funkcje biznesowe jeszcze nie istnieją.** Projekt nie wymaga hostingu ani Dockera.
+RoomBook to projekt lokalnej aplikacji webowej do przeglądania dostępności i rezerwowania uczelnianych sal do nauki, rozwijany na potrzeby przedmiotu **Inżynieria Oprogramowania II**. Student będzie zarządzać własnymi rezerwacjami, a administrator salami, blokadami i rezerwacjami studentów. **Etap 05 dostarcza siedem prezentacyjnych ekranów React oraz makiety SVG. Diagnostyczne API pozostaje dostępne; funkcje biznesowe jeszcze nie istnieją.** Projekt nie wymaga hostingu ani Dockera.
 
 Wymagania nadrzędne: [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md).
 
@@ -9,6 +9,8 @@ Dokumentacja analityczna etapu 02: [wymagania](docs/requirements/WYMAGANIA.md), 
 Dokumentacja etapu 03: [diagramy aktywności UML](docs/activities/DIAGRAMY_AKTYWNOSCI.md) i [architektura C4](docs/architecture/ARCHITEKTURA_C4.md).
 
 Projekty etapu 04: [model klas UML](docs/classes/MODEL_KLAS.md), [trzy sekwencje UML](docs/sequences/DIAGRAMY_SEKWENCJI.md) oraz [ERD i model danych](docs/data-model/MODEL_DANYCH.md) ze [szkicem Prisma](docs/data-model/schema-plan.prisma). Modele biznesowe pozostają do implementacji.
+
+Etap 05: [siedem makiet SVG i opis ekranów](docs/ui/MAKIETY.md), [nawigacja i powiązania WF/UC](docs/ui/NAWIGACJA.md). Po `npm run dev` wybierz podgląd studenta lub administratora; widoki mają adresy `/#UI-01`…`/#UI-07`. Działa nawigacja, lokalne filtry i trwały jasny/ciemny motyw. Dane są jawnie fikcyjne, a czas odniesienia stały: 19.10.2026, 08:00 Europe/Warsaw. Logowanie ma pola tylko do odczytu; potwierdzenia nie zapisują danych. Sesje i integracja biznesowego API należą do etapów 06–10.
 
 ## Technologie i środowisko
 
@@ -58,7 +60,7 @@ npm.cmd run db:validate
 
 `test` uruchamia rzeczywisty test API Vitest/Supertest bez importowania punktu uruchomienia serwera i bez bazy danych. `build` tworzy `apps/web/dist` oraz `apps/api/dist`. Zbudowane API można uruchomić poleceniem `npm.cmd run start --workspace @roombook/api`; frontend developerski uruchamia Vite. Workflow CI wykonuje instalację z lockfile, lint, sprawdzenie typów, walidację Prisma, test API i build; nie wymaga przeglądarek ani sekretów.
 
-Playwright ma jeden smoke test: widoczna strona startowa oraz diagnostyka API przez proxy. Przed pierwszym uruchomieniem należy pobrać Chromium (wymagany dostęp do sieci):
+Playwright zawiera smoke test RoomBook i diagnostyki API przez proxy oraz trzy krótkie testy podglądu: nawigacja/motyw, kalendarz/klawiatura i szerokości 375/1280 px w obu motywach. Przed pierwszym uruchomieniem należy pobrać Chromium (wymagany dostęp do sieci):
 
 ```powershell
 npx.cmd playwright install chromium
@@ -73,7 +75,7 @@ Przy małej ilości miejsca na dysku systemowym można przed instalacją i teste
 
 | Ścieżka                              | Odpowiedzialność                           |
 | ------------------------------------ | ------------------------------------------ |
-| `apps/web/src/`                      | Prosta strona React w języku polskim       |
+| `apps/web/src/`                      | Siedem ekranów demonstracyjnych React      |
 | `apps/web/vite.config.ts`            | Port frontendu i lokalne proxy API         |
 | `apps/api/src/app.ts`                | Konfiguracja Express bez `listen()`        |
 | `apps/api/src/server.ts`             | Uruchomienie serwera i zakończenie procesu |
