@@ -1,8 +1,81 @@
+// Aktywny model etapu 06; CHECK są częścią pierwszej migracji SQL.
 generator client {
   provider = "prisma-client"
   output   = "../apps/api/src/generated/prisma"
+  moduleFormat = "esm"
+  importFileExtension = "js"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  email        String @unique
+  displayName  String @map("display_name")
+  passwordHash String @map("password_hash")
+  role         String // STUDENT | ADMIN; CHECK w migracji SQL
+
+  studentBookings   Booking[]   @relation("BookingStudent")
+  createdBookings   Booking[]   @relation("BookingCreatedBy")
+  cancelledBookings Booking[]   @relation("BookingCancelledBy")
+  createdTimeBlocks TimeBlock[] @relation("TimeBlockCreatedBy")
+
+  @@map("users")
+}
+
+model Room {
+  id          Int     @id @default(autoincrement())
+  roomNumber  String  @unique @map("room_number")
+  name        String?
+  description String?
+  capacity    Int
+  isActive    Boolean @default(true) @map("is_active")
+
+  bookings   Booking[]
+  timeBlocks TimeBlock[]
+
+  @@map("rooms")
+}
+
+model Booking {
+  id                Int       @id @default(autoincrement())
+  studentId         Int       @map("student_id")
+  roomId            Int       @map("room_id")
+  createdByUserId   Int       @map("created_by_user_id")
+  date              String    // lokalne YYYY-MM-DD, Europe/Warsaw
+  startHour         Int       @map("start_hour")
+  durationSlots     Int       @map("duration_slots")
+  status            String    @default("ACTIVE") // ACTIVE | CANCELLED
+  createdAt         DateTime  @default(now()) @map("created_at")
+  cancelledAt       DateTime? @map("cancelled_at")
+  cancelledByUserId Int?      @map("cancelled_by_user_id")
+  cancelReason      String?   @map("cancel_reason") // cztery wartości: MODEL_DANYCH.md
+
+  student     User  @relation("BookingStudent", fields: [studentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  createdBy   User  @relation("BookingCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  cancelledBy User? @relation("BookingCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  room        Room  @relation(fields: [roomId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([roomId, date])
+  @@index([studentId, date])
+  @@map("bookings")
+}
+
+model TimeBlock {
+  id              Int      @id @default(autoincrement())
+  roomId          Int      @map("room_id")
+  date            String   // lokalne YYYY-MM-DD, Europe/Warsaw
+  startHour       Int      @map("start_hour")
+  durationSlots   Int      @map("duration_slots")
+  reason          String?
+  createdByUserId Int      @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  room      Room @relation(fields: [roomId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  createdBy User @relation("TimeBlockCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([roomId, date])
+  @@map("time_blocks")
 }

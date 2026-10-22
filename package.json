@@ -15,11 +15,20 @@
     "dev": "concurrently --kill-others --names api,web \"npm run dev --workspace @roombook/api\" \"npm run dev --workspace @roombook/web\"",
     "build": "npm run build --workspaces",
     "test": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "tsx tests/run-e2e.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces && tsc --project tsconfig.tools.json",
-    "db:validate": "prisma validate"
+    "db:validate": "prisma validate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "predev": "npm run db:generate",
+    "prebuild": "npm run db:generate",
+    "pretypecheck": "npm run db:generate",
+    "pretest": "npm run db:generate",
+    "pretest:e2e": "npm run db:generate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

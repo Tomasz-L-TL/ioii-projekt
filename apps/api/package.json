@@ -7,11 +7,15 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc --project tsconfig.build.json",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "predev": "npm run db:generate --prefix ../..",
+    "prebuild": "npm run db:generate --prefix ../..",
+    "pretypecheck": "npm run db:generate --prefix ../.."
   },
   "dependencies": {
-    "@prisma/client": "7.10.0",
     "@prisma/adapter-better-sqlite3": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.0.0",
     "express": "5.3.0"
   },
