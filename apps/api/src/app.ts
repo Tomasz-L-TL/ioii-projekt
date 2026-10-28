@@ -6,6 +6,9 @@ import { protectSessionMutation } from './auth/middleware.js';
 import type { SessionOptions } from './auth/session.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import { errorHandler } from './http/errors.js';
+import { BookingService } from './bookings/service.js';
+import { BookingReads } from './bookings/reads.js';
+import { bookingRouter } from './bookings/routes.js';
 
 export async function createApp(options: {
   db: PrismaClient;
@@ -29,6 +32,15 @@ export async function createApp(options: {
     '/api/auth',
     express.json({ limit: '4kb', strict: true, inflate: false }),
     authRouter(auth, options.session),
+  );
+  app.use(
+    '/api',
+    bookingRouter(
+      auth,
+      new BookingService(options.db),
+      new BookingReads(options.db),
+      options.allowedOrigins,
+    ),
   );
   app.use('/api', (_req, res) =>
     res.status(404).json({

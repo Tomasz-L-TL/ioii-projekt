@@ -6,7 +6,11 @@ export async function createDatabase(
   databaseUrl: string,
 ): Promise<PrismaClient> {
   const db = new PrismaClient({
-    adapter: new PrismaBetterSqlite3({ url: resolveDatabaseUrl(databaseUrl) }),
+    // Krótki limit synchronicznego oczekiwania adaptera; konflikt zapisu → 409.
+    adapter: new PrismaBetterSqlite3({
+      url: resolveDatabaseUrl(databaseUrl),
+      timeout: 100,
+    }),
   });
   try {
     await db.$connect();
