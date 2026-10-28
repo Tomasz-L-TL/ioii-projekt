@@ -1,6 +1,6 @@
 # RoomBook — system rezerwacji sal na uczelni
 
-RoomBook to lokalna aplikacja rozwijana na przedmiot **Inżynieria Oprogramowania II**. **Etap 06 dostarcza rzeczywistą bazę SQLite, migrację, seed oraz logowanie, sesje i kontrolę ról w API. Frontend nadal jest demonstracyjny i nie korzysta z autentycznego logowania.** Operacje rezerwacji, sal i blokad pozostają do implementacji. Projekt nie wymaga hostingu ani Dockera.
+RoomBook to lokalna aplikacja rozwijana na przedmiot **Inżynieria Oprogramowania II**. **Etap 07 dostarcza backend listy sal, dostępności, tworzenia i anulowania rezerwacji oraz własnej historii na rzeczywistej SQLite, z ochroną współbieżnych zapisów. Frontend nadal jest demonstracyjny i nie korzysta z API auth/rezerwacji.** Administracja salami, blokadami i cudzymi rezerwacjami pozostaje na etap 08. Projekt nie wymaga hostingu ani Dockera.
 
 Podstawą jest [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md). Dokumentacja projektu:
 
@@ -11,7 +11,7 @@ Podstawą jest [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md). Dokum
 
 ## Środowisko i instalacja
 
-Windows 11 / PowerShell, Node **24 LTS**, npm **11**. React/Vite/TypeScript i Express 5/TypeScript tworzą npm workspaces; SQLite używa Prisma **7.10.0** i adaptera better-sqlite3. Testy: Vitest/Supertest i Playwright. Wersje odtwarza `package-lock.json`. Polecenia wykonuj w katalogu głównym; `npm.cmd` omija problemy polityki skryptów PowerShell.
+Windows 11 / PowerShell, Node **24 LTS**, npm **11**. React/Vite/TypeScript i Express 5/TypeScript tworzą npm workspaces; SQLite używa Prisma **7.10.1** i adaptera better-sqlite3. Testy: Vitest/Supertest i Playwright. Wersje odtwarza `package-lock.json`. Polecenia wykonuj w katalogu głównym; `npm.cmd` omija problemy polityki skryptów PowerShell.
 
 ```powershell
 node --version
@@ -44,13 +44,13 @@ Główny `.env` jest ładowany jawnie; zmienne procesu mają pierwszeństwo. `WE
 
 ## Baza i seed
 
-CLI, klient i adapter mają wersję **7.10.0**. URL znajduje się w [prisma.config.ts](prisma.config.ts), zgodnie z [konfiguracją Prisma 7](https://www.prisma.io/docs/orm/v7/reference/prisma-config-reference). Generator `prisma-client` tworzy ESM w ignorowanym `apps/api/src/generated/prisma/`; generowanie poprzedza dev, testy, typecheck i build, również po `npm ci`. Importy `.js` są zgodne z NodeNext i zbudowanym API.
+CLI, klient i adapter mają wersję **7.10.1**. URL znajduje się w [prisma.config.ts](prisma.config.ts), zgodnie z [konfiguracją Prisma 7](https://www.prisma.io/docs/orm/v7/reference/prisma-config-reference). Generator `prisma-client` tworzy ESM w ignorowanym `apps/api/src/generated/prisma/`; generowanie poprzedza dev, testy, typecheck i build, również po `npm ci`. Importy `.js` są zgodne z NodeNext i zbudowanym API.
 
 `DATABASE_URL=file:./prisma/dev.db` jest rozwiązywany względem repozytorium również po buildzie i uruchomieniu z workspace. `db:migrate` i `db:deploy` wykonują `prisma migrate deploy`: stosują zapisaną migrację bez resetu danych, tworzenia kolejnych migracji i bazy cienia. `db:seed` wykonuje seed jawnie, zgodnie z Prisma 7.
 
 Migracja tworzy cztery tabele domenowe: `users`, `rooms`, `bookings`, `time_blocks`. Prisma ma dodatkową techniczną `_prisma_migrations`, SQLite własną `sqlite_sequence`; nie ma tabeli sesji. Sześć FK ma RESTRICT dla DELETE/UPDATE. Adapter jawnie włącza i sprawdza `PRAGMA foreign_keys=ON`. CHECK chronią role, statusy, powody i kompletność anulowania, dodatnią całkowitą capacity, niepusty numer oraz całkowite godziny/sloty. Indeksy (sala,data) i (student,data) wspierają odczyty.
 
-Rola właściciela rezerwacji/autora blokady, daty, przyszłość, limity i konflikty przedziałów wymagają przyszłych usług domenowych etapów 07–08. Obecna baza nie gwarantuje tych reguł; nie ma pozornego indeksu unikatowego godziny ani triggerów biznesowych. Endpointy rezerwacji, sal i blokad jeszcze nie istnieją.
+Usługa rezerwacji egzekwuje role, daty, przyszłość, limity, aktywność sal i konflikty przedziałów w jednej transakcji SQLite z blokadą zapisu przed odczytami. Anulowanie zachowuje historię. Szczegóły i dowód współbieżności: [API rezerwacji](docs/api/REZERWACJE_API.md). Baza bezpośrednio nie gwarantuje wszystkich reguł domenowych; nie ma pozornego indeksu unikatowego godziny ani triggerów biznesowych. Zarządzanie salami/blokadami pozostaje na etap 08.
 
 Seed wymaga `SEED_DEMO_PASSWORD`: minimum 12 znaków, maksimum 72 bajty UTF-8 (ograniczenie bcrypt). Generator powyżej tworzy silne losowe hasło. Własne hasło można wybrać przed pierwszym seedem, edytując ignorowany `.env`. Hasła w DB: bcrypt cost 12. Jedna transakcja dodaje brakujące 6 fikcyjnych kont i 8 aktywnych sal zgodnych ze specyfikacją, bez rezerwacji/blokad. Kolejne wywołania zachowują istniejące hasła, role, dane i aktywność sal oraz historię. Zmiana hasła w `.env` nie zmienia hasła już istniejących kont.
 
@@ -80,6 +80,21 @@ Sesja: `base64url({sub,exp}).base64url(HMAC-SHA256)`, TTL 8h, tylko cookie `room
 
 POST wymaga application/json, maksymalnie 4 KiB i zaufanego Origin: 127.0.0.1 ze skonfigurowanymi portami web/API. Fetch Metadata odrzuca cross-site i przeglądarkowe żądania bez Origin; klienci terminalowi bez obu nagłówków są dozwoleni. Nie ma CORS z cookies. Frontend nadal ma demonstracyjne logowanie. Sekrety nie trafiają do localStorage, URL ani logów.
 
+## Rezerwacje przez HTTP
+
+Po zalogowaniu dostępne są `GET /api/rooms`, `GET /api/availability?roomId=&weekStart=`, `POST /api/bookings`, `GET /api/bookings/mine` i `POST /api/bookings/:id/cancel`. Lista własna i anulowanie wymagają STUDENT. ADMIN tworzy przez ten sam POST dla wskazanego studenta; jego listy i anulowanie nie są jeszcze wdrożone. Payloady, DTO, kody błędów oraz reguły czasu opisuje [kontrakt API](docs/api/REZERWACJE_API.md).
+
+Zachowaj `$roomBookCookies` z próby logowania powyżej, wykonując logout dopiero po sprawdzeniu rezerwacji. Wybierz przyszły dzień roboczy i dostępny termin, maksymalnie 14 dni od dziś dla studenta:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:3001/api/rooms -WebSession $roomBookCookies
+$bookingDate = Read-Host 'Data rezerwacji YYYY-MM-DD (Europe/Warsaw)'
+$bookingBody = @{ roomId = 1; date = $bookingDate; startHour = 10; durationSlots = 2 } | ConvertTo-Json
+$booking = Invoke-RestMethod http://127.0.0.1:3001/api/bookings -Method Post -ContentType 'application/json' -Body $bookingBody -WebSession $roomBookCookies
+Invoke-RestMethod http://127.0.0.1:3001/api/bookings/mine -WebSession $roomBookCookies
+Invoke-RestMethod "http://127.0.0.1:3001/api/bookings/$($booking.id)/cancel" -Method Post -ContentType 'application/json' -Body '{}' -WebSession $roomBookCookies
+```
+
 ## Kontrola jakości
 
 ```powershell
@@ -91,7 +106,9 @@ npm.cmd run db:validate
 npm.cmd audit
 ```
 
-Vitest/Supertest sprawdza auth, role, cookie, błędne wejścia, migrację, FK/CHECK/indeksy, idempotencję i rollback seeda. Każda grupa integracyjna automatycznie migruje oddzielny plik SQLite w katalogu tymczasowym, używa losowego sekretu/hasła w pamięci, zamyka połączenia i usuwa pliki. Testy nie używają prywatnej lokalnej bazy ani daty makiet; Express można testować bez startowego `listen()`.
+Vitest/Supertest sprawdza auth, role, cookie, błędne wejścia, migrację, FK/CHECK/indeksy, idempotencję i rollback seeda oraz TC-05…14: czas Warszawy/DST, terminy 45/90, limity, konflikty sali/studenta/blokad, historię i anulowanie. Równoległe HTTP na dwóch klientach jednego pliku SQLite sprawdza kolizje, limit i pojedyncze anulowanie; test utrzymywanej blokady potwierdza rzeczywisty konflikt zapisu. Każda grupa integracyjna migruje oddzielny plik tymczasowy, używa losowego sekretu/hasła w pamięci, zamyka połączenia i usuwa pliki. Testy nie używają prywatnej lokalnej bazy ani daty makiet; granice czasu sprawdzają usługi z wstrzykiwanym zegarem.
+
+Kontrola etapu 07 odbyła się na Node 24.20.0 i npm 12.2.1 (ostrzeżenie o deklarowanym npm 11). `npm ci` odtworzyło lockfile. npm 12 zablokował skrypty instalacyjne; brakujący moduł natywny odtworzono przez `npm.cmd rebuild better-sqlite3 --dangerously-allow-all-scripts` (tylko wskazany pakiet), bez zmian manifestów i polityki projektu. Zalecane pozostaje środowisko npm 11 z instrukcji. Audit zgłosił 3 podatności: body-parser (high), fast-uri i qs (moderate); nie wykonywano automatycznej aktualizacji. Lokalny Chromium Playwright nie jest zainstalowany, więc E2E nie wykonano.
 
 `build` tworzy `apps/web/dist` i `apps/api/dist`. Start zbudowanego API: `npm.cmd run start --workspace @roombook/api`. CI instaluje lockfile, generuje klienta przed importami, sprawdza lint, typy, schemat, testy i build; nie wymaga sekretów lokalnych ani przeglądarek. Audit jest informacyjny: wcześniejsze zgłoszenia wysokiego poziomu dotyczyły drzewa Prisma CLI. Nie uruchamiaj automatycznie `audit fix --force` ani nie zmieniaj głównych wersji Prisma.
 
@@ -105,17 +122,18 @@ Opcjonalna instalacja `npx.cmd playwright install chromium` wymaga sieci i osobn
 
 ## Struktura i konwencje
 
-| Ścieżka                              | Odpowiedzialność                                              |
-| ------------------------------------ | ------------------------------------------------------------- |
-| `apps/web/src/`                      | Siedem demonstracyjnych ekranów React                         |
-| `apps/web/vite.config.ts`            | Port web i proxy API                                          |
-| `apps/api/src/app.ts`, `server.ts`   | Fabryka Express oraz uruchomienie i zamknięcie połączeń       |
-| `apps/api/src/auth/`                 | Sesja, bcrypt, normalizacja, AuthService, middleware i router |
-| `apps/api/src/db/`                   | Klient adaptera SQLite i atomowy seed                         |
-| `apps/api/src/config/`, `http/`      | Główny .env, ścieżki i bezpieczne błędy API                   |
-| `prisma/`, `prisma.config.ts`        | Aktywny model, migracja i punkt startowy seeda                |
-| `tests/e2e/`, `playwright.config.ts` | Cztery testy UI etapu 05                                      |
-| `docs/`, `.github/workflows/ci.yml`  | Dokumentacja i CI                                             |
+| Ścieżka                              | Odpowiedzialność                                                                          |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `apps/web/src/`                      | Siedem demonstracyjnych ekranów React                                                     |
+| `apps/web/vite.config.ts`            | Port web i proxy API                                                                      |
+| `apps/api/src/app.ts`, `server.ts`   | Fabryka Express oraz uruchomienie i zamknięcie połączeń                                   |
+| `apps/api/src/auth/`                 | Sesja, bcrypt, normalizacja, AuthService, middleware i router                             |
+| `apps/api/src/bookings/`             | Odczyty sal/dostępności, reguły czasu, rezerwacja/historia/anulowanie, transakcje i testy |
+| `apps/api/src/db/`                   | Klient adaptera SQLite i atomowy seed                                                     |
+| `apps/api/src/config/`, `http/`      | Główny .env, ścieżki i bezpieczne błędy API                                               |
+| `prisma/`, `prisma.config.ts`        | Aktywny model, migracja i punkt startowy seeda                                            |
+| `tests/e2e/`, `playwright.config.ts` | Cztery testy UI etapu 05                                                                  |
+| `docs/`, `.github/workflows/ci.yml`  | Dokumentacja i CI                                                                         |
 
 TypeScript strict, ESM; API ma NodeNext i importy `.js`, frontend używa Bundler. Kod ma angielskie nazwy, dokumentacja i interfejs są polskie. ESLint i Prettier: `npm.cmd run format`. Specyfikacja jest wyłączona z formatowania. `.env`, SQLite i pliki pomocnicze, klient generowany, zależności, buildy, cache i raporty testów są ignorowane przez Git. `.env.example` zawiera wyłącznie nazwy i niesekretne wartości.
 
