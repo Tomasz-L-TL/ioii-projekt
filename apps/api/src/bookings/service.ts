@@ -141,9 +141,12 @@ export class BookingService {
   async cancelBooking(actor: UserDto, bookingId: number) {
     positiveId(bookingId);
     return writeTransaction(this.db, async (tx) => {
-      await currentActor(actor, tx, true);
+      await currentActor(actor, tx);
       const booking = await BookingRepository.findById(bookingId, tx);
-      if (!booking || booking.studentId !== actor.id)
+      if (
+        !booking ||
+        (actor.role === 'STUDENT' && booking.studentId !== actor.id)
+      )
         throw new ApiError(
           404,
           'BOOKING_NOT_FOUND',
@@ -166,9 +169,10 @@ export class BookingService {
         (await BookingRepository.cancelMany(
           [bookingId],
           actor.id,
-          'STUDENT_CANCELLED',
+          actor.role === 'ADMIN' ? 'ADMIN_CANCELLED' : 'STUDENT_CANCELLED',
           now,
           tx,
+          actor.role === 'ADMIN' ? null : actor.id,
         )) !== 1
       )
         throw new ApiError(
@@ -184,7 +188,8 @@ export class BookingService {
           status: 'CANCELLED',
           cancelledAt: now,
           cancelledByUserId: actor.id,
-          cancelReason: 'STUDENT_CANCELLED',
+          cancelReason:
+            actor.role === 'ADMIN' ? 'ADMIN_CANCELLED' : 'STUDENT_CANCELLED',
         },
         now,
       );

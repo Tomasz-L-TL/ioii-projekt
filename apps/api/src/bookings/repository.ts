@@ -2,6 +2,16 @@ import type { Prisma } from '../generated/prisma/client.js';
 import { localNow, overlaps } from './time.js';
 
 export type Tx = Prisma.TransactionClient;
+export function futureActiveWhere(now: Date) {
+  const local = localNow(now);
+  return {
+    status: 'ACTIVE',
+    OR: [
+      { date: { gt: local.date } },
+      { date: local.date, startHour: { gt: local.hour } },
+    ],
+  };
+}
 export const bookingInclude = {
   room: { select: { id: true, roomNumber: true, name: true, capacity: true } },
   createdBy: { select: { id: true, displayName: true, role: true } },
@@ -21,15 +31,10 @@ export const BookingRepository = {
   findById: (id: number, tx: Tx) =>
     tx.booking.findUnique({ where: { id }, include: bookingInclude }),
   countFutureActive(studentId: number, now: Date, tx: Tx) {
-    const local = localNow(now);
     return tx.booking.count({
       where: {
         studentId,
-        status: 'ACTIVE',
-        OR: [
-          { date: { gt: local.date } },
-          { date: local.date, startHour: { gt: local.hour } },
-        ],
+        ...futureActiveWhere(now),
       },
     });
   },
@@ -59,18 +64,14 @@ export const BookingRepository = {
     reason: string,
     now: Date,
     tx: Tx,
+    studentId: number | null = actorId,
   ) {
-    const local = localNow(now);
     return tx.booking
       .updateMany({
         where: {
           id: { in: ids },
-          studentId: actorId,
-          status: 'ACTIVE',
-          OR: [
-            { date: { gt: local.date } },
-            { date: local.date, startHour: { gt: local.hour } },
-          ],
+          ...(studentId === null ? {} : { studentId }),
+          ...futureActiveWhere(now),
         },
         data: {
           status: 'CANCELLED',

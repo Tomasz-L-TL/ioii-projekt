@@ -48,6 +48,8 @@ export async function writeTransaction<T>(
   db: PrismaClient,
   operation: (tx: Tx) => Promise<T>,
 ): Promise<T> {
+  // Wspólna bramka dla rezerwacji, sal i blokad: żadna z tych usług nie
+  // może podejmować decyzji o zapisie przed uzyskaniem blokady SQLite.
   try {
     return await db.$transaction(
       async (tx) => {

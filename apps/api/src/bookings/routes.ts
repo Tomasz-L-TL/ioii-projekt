@@ -65,7 +65,6 @@ export function bookingRouter(
   router.post(
     '/bookings/:id/cancel',
     authenticated,
-    requireRole('STUDENT'),
     ...mutation,
     async (req, res) => {
       if (Object.keys(req.query).length) invalid('Niedozwolone parametry.');

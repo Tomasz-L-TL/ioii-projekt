@@ -31,7 +31,7 @@ export const requireRole =
   };
 
 export const protectSessionMutation =
-  (allowedOrigins: readonly string[]): RequestHandler =>
+  (allowedOrigins: readonly string[], requireJson = true): RequestHandler =>
   (req, _res, next) => {
     // Same-site obejmuje też obcy port: Origin musi należeć do jawnej listy.
     const origin = req.get('origin');
@@ -47,7 +47,7 @@ export const protectSessionMutation =
         'Niedozwolone źródło żądania.',
       );
     }
-    if (!req.is('application/json'))
+    if (requireJson && !req.is('application/json'))
       throw new ApiError(
         400,
         'EXPECTED_JSON',

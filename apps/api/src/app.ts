@@ -9,6 +9,8 @@ import { errorHandler } from './http/errors.js';
 import { BookingService } from './bookings/service.js';
 import { BookingReads } from './bookings/reads.js';
 import { bookingRouter } from './bookings/routes.js';
+import { adminRouter } from './admin/routes.js';
+import { AdminService } from './admin/service.js';
 
 export async function createApp(options: {
   db: PrismaClient;
@@ -32,6 +34,14 @@ export async function createApp(options: {
     '/api/auth',
     express.json({ limit: '4kb', strict: true, inflate: false }),
     authRouter(auth, options.session),
+  );
+  app.use(
+    '/api/admin',
+    adminRouter(
+      auth,
+      new AdminService(options.db, options.session.secret),
+      options.allowedOrigins,
+    ),
   );
   app.use(
     '/api',
