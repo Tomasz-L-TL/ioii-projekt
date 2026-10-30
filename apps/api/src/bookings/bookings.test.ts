@@ -239,7 +239,7 @@ describe('Rezerwacje API na migrowanym pliku SQLite', () => {
     const foreign = await cancel(booking.body.id, 3).expect(404);
     const missing = await cancel(999999, 3).expect(404);
     expect(foreign.body).toEqual(missing.body);
-    await cancel(booking.body.id, 1).expect(403);
+    await cancel(999999, 1).expect(404);
     const cancelled = await cancel(booking.body.id).expect(200);
     expect(cancelled.body).toMatchObject({
       status: 'CANCELLED',
@@ -388,7 +388,7 @@ describe('Rezerwacje API na migrowanym pliku SQLite', () => {
     await request(app)
       .get('/api/admin/bookings')
       .set('Cookie', cookie())
-      .expect(404);
+      .expect(403);
     expect(await fixture.db.booking.count()).toBe(0);
   });
 

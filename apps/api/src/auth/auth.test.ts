@@ -175,7 +175,9 @@ describe('API auth na rzeczywistym adapterze SQLite', () => {
     await request(roleApp).get('/student').set('Cookie', cookie(2)).expect(200);
     await request(roleApp).get('/student').set('Cookie', cookie(1)).expect(403);
     await request(app).get('/admin').expect(404);
-    await request(app).get('/api/admin').expect(404);
+    // Moduł admin etapu 08 chroni cały prefiks, także nieznane ścieżki.
+    await request(app).get('/api/admin').expect(401);
+    await request(app).get('/api/admin').set('Cookie', cookie(1)).expect(404);
   });
 
   it('odczytuje aktualną rolę z DB przy każdym żądaniu, a usunięte konto daje 401', async () => {
