@@ -16,7 +16,7 @@ participant BookingRepository as Bookings
 database SQLite as DB
 
 Admin -> Web : Wybierz salę, termin 1/2 sloty, reason
-Web -> API : POST /api/admin/blocks (mode=preview, input)
+Web -> API : GET /api/admin/blocks/preview (query input, także reason)
 API -> Auth : authenticate(sessionToken)
 Auth -> Users : findById(sessionUserId, null)
 Users -> DB : SELECT users
@@ -46,12 +46,14 @@ else ADMIN
     Service -> Bookings : findFutureForRoom(input.roomId, window, now, null)
     Bookings -> DB : SELECT ACTIVE, początek > now, sala/data i nakładanie
     Bookings --> Service : affectedBookings
-    Service --> API : ImpactPreview(count, confirmationToken)
-    API --> Web : 200: liczba N, podsumowanie i token
+    Service --> API : ImpactPreview(roomId, cancellationCount, expectedCancellationIds, confirmationToken)
+    API --> Web : 200: liczba N, rosnące ID, token
     Web --> Admin : Pokaż N anulowań i termin (również N=0)
     note over Service, API
-      Token podpisany przez API wiąże admina, input, N i posortowane ID
-      podglądu; nie jest tabelą ani nową sesją. Zmiana input unieważnia token.
+      HMAC-SHA256, ważność 5 minut; podpisany skrót wiąże admina,
+      operację, salę, pełny znormalizowany input (także reason), N i ID.
+      Osobny klucz wyprowadzony z sekretu aplikacji; brak nowej tabeli.
+      Zmiana input unieważnia potwierdzenie, także gdy N=0.
       Podgląd bez zapisów; jego wynik jest orientacyjny.
     end note
     alt administrator rezygnuje
@@ -59,7 +61,7 @@ else ADMIN
       note over Web : Koniec bez zapisu.
     else świadomie potwierdza N i operację
       Admin -> Web : Potwierdź skutki
-      Web -> API : POST /api/admin/blocks (mode=confirm, input, confirmationToken)
+      Web -> API : POST /api/admin/blocks (input, confirmed=true, expectedCancellationIds, confirmationToken)
       API -> Auth : authenticate(sessionToken)
       Auth -> Users : findById(sessionUserId, null)
       Users -> DB : SELECT users
@@ -71,8 +73,8 @@ else ADMIN
         API -> Service : createBlock(actor, input, confirmationToken)
         activate Service
         break błędny token / powiązanie
-          Service --> API : 400/403, bez zapisu
-          API --> Web : odmowa potwierdzenia
+          Service --> API : 422 błędny token / 409 PREVIEW_STALE, bez zapisu
+          API --> Web : odmowa; wymagany nowy podgląd
         end
         critical jedna serializowana transakcja zapisu
           Service -> DB : BEGIN IMMEDIATE → tx
@@ -102,7 +104,7 @@ else ADMIN
             Service --> API : 403 / 404 / 422 / 409
           else inna liczba LUB zestaw ID
             Service -> DB : ROLLBACK
-            Service --> API : 409 PREVIEW_CHANGED; wymagany nowy podgląd i zgoda
+            Service --> API : 409 PREVIEW_STALE; wymagany nowy podgląd i zgoda
           else komplet reguł spełniony i skutki zgodne
             Service -> Blocks : insert(data, tx)
             note right of Blocks
@@ -132,4 +134,11 @@ else ADMIN
     end
   end
 end
+note over Service, DB
+  Implementacja: odpowiedzialność TimeBlockService realizuje AdminService.
+  Jedna writeTransaction Prisma; pierwszy UPDATE rooms SET id=id WHERE 0
+  uzyskuje blokadę zapisu przed odczytami na tym samym tx.
+  Zegar, przyszłość i ważność potwierdzenia sprawdzane przed/po anulowaniu;
+  przekroczenie początku lub niezgodna liczba zmian wycofują całość.
+end note
 @enduml

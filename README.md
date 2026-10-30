@@ -1,6 +1,6 @@
 # RoomBook — system rezerwacji sal na uczelni
 
-RoomBook to lokalna aplikacja rozwijana na przedmiot **Inżynieria Oprogramowania II**. **Etap 07 dostarcza backend listy sal, dostępności, tworzenia i anulowania rezerwacji oraz własnej historii na rzeczywistej SQLite, z ochroną współbieżnych zapisów. Frontend nadal jest demonstracyjny i nie korzysta z API auth/rezerwacji.** Administracja salami, blokadami i cudzymi rezerwacjami pozostaje na etap 08. Projekt nie wymaga hostingu ani Dockera.
+RoomBook to lokalna aplikacja rozwijana na przedmiot **Inżynieria Oprogramowania II**. **Etapy 07/08 dostarczają backend rezerwacji i administracji na rzeczywistej SQLite: sale, blokady, historia i anulowania, z ochroną współbieżnych zapisów oraz podpisanym podglądem skutków operacji masowych. Frontend nadal jest demonstracyjny i nie korzysta z API.** Integracja studenta i administratora należy do etapów 09/10. Projekt nie wymaga hostingu ani Dockera.
 
 Podstawą jest [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md). Dokumentacja projektu:
 
@@ -50,7 +50,7 @@ CLI, klient i adapter mają wersję **7.10.1**. URL znajduje się w [prisma.conf
 
 Migracja tworzy cztery tabele domenowe: `users`, `rooms`, `bookings`, `time_blocks`. Prisma ma dodatkową techniczną `_prisma_migrations`, SQLite własną `sqlite_sequence`; nie ma tabeli sesji. Sześć FK ma RESTRICT dla DELETE/UPDATE. Adapter jawnie włącza i sprawdza `PRAGMA foreign_keys=ON`. CHECK chronią role, statusy, powody i kompletność anulowania, dodatnią całkowitą capacity, niepusty numer oraz całkowite godziny/sloty. Indeksy (sala,data) i (student,data) wspierają odczyty.
 
-Usługa rezerwacji egzekwuje role, daty, przyszłość, limity, aktywność sal i konflikty przedziałów w jednej transakcji SQLite z blokadą zapisu przed odczytami. Anulowanie zachowuje historię. Szczegóły i dowód współbieżności: [API rezerwacji](docs/api/REZERWACJE_API.md). Baza bezpośrednio nie gwarantuje wszystkich reguł domenowych; nie ma pozornego indeksu unikatowego godziny ani triggerów biznesowych. Zarządzanie salami/blokadami pozostaje na etap 08.
+Usługi egzekwują role, daty, przyszłość, limity, aktywność sal i konflikty przedziałów w jednej transakcji SQLite z blokadą zapisu przed odczytami. Anulowanie zachowuje historię. Szczegóły i dowód współbieżności: [API rezerwacji](docs/api/REZERWACJE_API.md) i [API administracji](docs/api/ADMINISTRACJA_API.md). Baza bezpośrednio nie gwarantuje wszystkich reguł domenowych; nie ma pozornego indeksu unikatowego godziny ani triggerów biznesowych.
 
 Seed wymaga `SEED_DEMO_PASSWORD`: minimum 12 znaków, maksimum 72 bajty UTF-8 (ograniczenie bcrypt). Generator powyżej tworzy silne losowe hasło. Własne hasło można wybrać przed pierwszym seedem, edytując ignorowany `.env`. Hasła w DB: bcrypt cost 12. Jedna transakcja dodaje brakujące 6 fikcyjnych kont i 8 aktywnych sal zgodnych ze specyfikacją, bez rezerwacji/blokad. Kolejne wywołania zachowują istniejące hasła, role, dane i aktywność sal oraz historię. Zmiana hasła w `.env` nie zmienia hasła już istniejących kont.
 
@@ -82,7 +82,7 @@ POST wymaga application/json, maksymalnie 4 KiB i zaufanego Origin: 127.0.0.1 ze
 
 ## Rezerwacje przez HTTP
 
-Po zalogowaniu dostępne są `GET /api/rooms`, `GET /api/availability?roomId=&weekStart=`, `POST /api/bookings`, `GET /api/bookings/mine` i `POST /api/bookings/:id/cancel`. Lista własna i anulowanie wymagają STUDENT. ADMIN tworzy przez ten sam POST dla wskazanego studenta; jego listy i anulowanie nie są jeszcze wdrożone. Payloady, DTO, kody błędów oraz reguły czasu opisuje [kontrakt API](docs/api/REZERWACJE_API.md).
+Po zalogowaniu dostępne są `GET /api/rooms`, `GET /api/availability?roomId=&weekStart=`, `POST /api/bookings`, `GET /api/bookings/mine` i `POST /api/bookings/:id/cancel`. Lista własna wymaga STUDENT; anulowanie obsługuje obie role, a student wyłącznie własne wpisy. ADMIN tworzy przez ten sam POST dla wskazanego studenta (wariant etapu 07). Payloady, DTO, kody błędów oraz reguły czasu opisuje [kontrakt API](docs/api/REZERWACJE_API.md).
 
 Zachowaj `$roomBookCookies` z próby logowania powyżej, wykonując logout dopiero po sprawdzeniu rezerwacji. Wybierz przyszły dzień roboczy i dostępny termin, maksymalnie 14 dni od dziś dla studenta:
 
@@ -95,6 +95,27 @@ Invoke-RestMethod http://127.0.0.1:3001/api/bookings/mine -WebSession $roomBookC
 Invoke-RestMethod "http://127.0.0.1:3001/api/bookings/$($booking.id)/cancel" -Method Post -ContentType 'application/json' -Body '{}' -WebSession $roomBookCookies
 ```
 
+## Administracja przez HTTP
+
+Po zalogowaniu jako ADMIN działają:
+
+- `GET /api/admin/students`, `/api/admin/bookings`, `/api/admin/blocks`;
+- `POST /api/admin/rooms` i `PATCH /api/admin/rooms/:id` (edycja albo aktywność);
+- `GET /api/admin/rooms/:id/deactivation-preview` i `GET /api/admin/blocks/preview`;
+- `POST /api/admin/blocks` i `DELETE /api/admin/blocks/:id` bez body;
+- wspólny `POST /api/bookings/:id/cancel` z `{}`.
+
+Dezaktywacja i dodanie blokady wymagają najpierw GET podglądu, następnie `confirmed:true`, zwróconych `expectedCancellationIds` i `confirmationToken`. Token HMAC wiąże administratora, operację, pełne parametry i skutki przez 5 minut. Przy blokadzie podaj ten sam `reason` już w query podglądu. Zmiana danych/terminu/skutków wymaga nowego podglądu, także przy zerze anulowań. Aktywacja i usunięcie blokady nie przywracają historii. Szczegółowe przykłady: [API administracji](docs/api/ADMINISTRACJA_API.md).
+
+Lokalny odczyt po zalogowaniu z zachowanym `$roomBookCookies`:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:3001/api/admin/students -WebSession $roomBookCookies
+Invoke-RestMethod http://127.0.0.1:3001/api/admin/bookings -WebSession $roomBookCookies
+Invoke-RestMethod http://127.0.0.1:3001/api/admin/rooms/1/deactivation-preview -WebSession $roomBookCookies
+npm.cmd exec -- vitest run apps/api/src/admin/admin.test.ts
+```
+
 ## Kontrola jakości
 
 ```powershell
@@ -104,9 +125,14 @@ npm.cmd run test
 npm.cmd run build
 npm.cmd run db:validate
 npm.cmd audit
+npm.cmd audit --omit=dev
 ```
 
 Vitest/Supertest sprawdza auth, role, cookie, błędne wejścia, migrację, FK/CHECK/indeksy, idempotencję i rollback seeda oraz TC-05…14: czas Warszawy/DST, terminy 45/90, limity, konflikty sali/studenta/blokad, historię i anulowanie. Równoległe HTTP na dwóch klientach jednego pliku SQLite sprawdza kolizje, limit i pojedyncze anulowanie; test utrzymywanej blokady potwierdza rzeczywisty konflikt zapisu. Każda grupa integracyjna migruje oddzielny plik tymczasowy, używa losowego sekretu/hasła w pamięci, zamyka połączenia i usuwa pliki. Testy nie używają prywatnej lokalnej bazy ani daty makiet; granice czasu sprawdzają usługi z wstrzykiwanym zegarem.
+
+TC-15…21 dodają administracyjne DTO/role, walidację sal, podpis/ważność/powiązanie tokenów, nieaktualny dokładny zbiór (także ta sama liczba, inne ID), dezaktywację i blokady z anulowaniami. Każdy przypadek administracji ma własny migrowany plik SQLite. Wyścigi na dwóch klientach sprawdzają rezerwację wobec blokady/dezaktywacji, dwie zachodzące blokady, dwa potwierdzenia i admin-cancel wobec student-cancel; oprócz HTTP kontrolują trwałe tabele. Awaria DB, pominięty UPDATE i przekroczenie początku wycofują całą zmianę. React pozostaje bez integracji.
+
+Kontrola etapu 08: Node 24.20.0, npm 11.19.1, Prisma 7.10.1; **162/162 testy PASS**, bez pominięć (135 dotychczasowych + 27 administracji). Wykonano z powodzeniem `db:generate`, `db:validate`, `lint`, `typecheck`, `test`, `build`, `audit` i `audit --omit=dev`; oba audyty: 0 podatności. 423 obecne pakiety mają wersje zgodne z lockfile; `npm ci` nie było potrzebne. Nie instalowano przeglądarek ani nie uruchamiano E2E. Bez zmian zależności, migracji i frontendu.
 
 Kontrola etapu 07 odbyła się na Node 24.20.0 i npm 12.2.1 (ostrzeżenie o deklarowanym npm 11). `npm ci` odtworzyło lockfile. npm 12 zablokował skrypty instalacyjne; brakujący moduł natywny odtworzono przez `npm.cmd rebuild better-sqlite3 --dangerously-allow-all-scripts` (tylko wskazany pakiet), bez zmian manifestów i polityki projektu. Zalecane pozostaje środowisko npm 11 z instrukcji. Audit zgłosił 3 podatności: body-parser (high), fast-uri i qs (moderate); nie wykonywano automatycznej aktualizacji. Lokalny Chromium Playwright nie jest zainstalowany, więc E2E nie wykonano.
 
@@ -129,6 +155,7 @@ Opcjonalna instalacja `npx.cmd playwright install chromium` wymaga sieci i osobn
 | `apps/api/src/app.ts`, `server.ts`   | Fabryka Express oraz uruchomienie i zamknięcie połączeń                                   |
 | `apps/api/src/auth/`                 | Sesja, bcrypt, normalizacja, AuthService, middleware i router                             |
 | `apps/api/src/bookings/`             | Odczyty sal/dostępności, reguły czasu, rezerwacja/historia/anulowanie, transakcje i testy |
+| `apps/api/src/admin/`                | Listy ADMIN, sale, blokady, HMAC preview/confirm i testy atomowości/współbieżności        |
 | `apps/api/src/db/`                   | Klient adaptera SQLite i atomowy seed                                                     |
 | `apps/api/src/config/`, `http/`      | Główny .env, ścieżki i bezpieczne błędy API                                               |
 | `prisma/`, `prisma.config.ts`        | Aktywny model, migracja i punkt startowy seeda                                            |

@@ -87,7 +87,7 @@ Sukces 201 zwraca DTO:
 
 `state`: `UPCOMING`, `STARTED`, `COMPLETED`, `CANCELLED`. Koniec zajęć wyznacza 45/90 minut; bufor nadal zajmuje pełne 60/120 minut. Trwały status DB: ACTIVE/CANCELLED. `canCancel` wymaga ACTIVE i początku ściśle w przyszłości.
 
-`POST /api/bookings/:id/cancel`, tylko STUDENT, body `{}`. Sukces 200 z aktualnym DTO. Warunkowy UPDATE ustawia CANCELLED, czas zdarzenia, ID studenta i STUDENT_CANCELLED; rekord pozostaje. Cudzy i nieistniejący rekord mają identyczną odmowę 404. Już anulowany: 409, rozpoczęty/zakończony: 422. ADMIN otrzymuje 403; jego anulowanie i listy należą do etapu 08. Klient nie podaje powodu anulowania.
+`POST /api/bookings/:id/cancel`, STUDENT i ADMIN, body `{}`. Sukces 200 z aktualnym DTO. STUDENT anuluje wyłącznie własną przyszłą ACTIVE; warunkowy UPDATE ustawia CANCELLED, czas zdarzenia, ID studenta i STUDENT_CANCELLED. Cudzy i nieistniejący rekord mają dla studenta identyczną odmowę 404. ADMIN może anulować dowolną przyszłą ACTIVE z ADMIN_CANCELLED i własnym ID inicjatora. Rekord pozostaje. Już anulowany: 409, rozpoczęty/zakończony: 422. Klient nie podaje powodu anulowania. Listy i operacje administracyjne opisuje [API administracji](ADMINISTRACJA_API.md).
 
 ## Reguły i błędy
 
