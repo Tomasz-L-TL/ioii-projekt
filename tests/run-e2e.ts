@@ -4,7 +4,7 @@ import { repositoryRoot } from '../apps/api/src/config/database.js';
 import { testDatabase } from '../apps/api/src/testing/database.js';
 
 // Odrębna, migrowana baza i sekret w pamięci także dla serwera Playwright.
-const fixture = await testDatabase(false);
+const fixture = await testDatabase(true);
 await fixture.db.$disconnect();
 try {
   const result = spawnSync(
@@ -22,6 +22,7 @@ try {
         ...process.env,
         SESSION_SECRET: fixture.secret.toString('hex'),
         DATABASE_URL: fixture.databaseUrl,
+        ROOMBOOK_E2E_PASSWORD: fixture.password,
         NODE_ENV: 'development',
       },
     },

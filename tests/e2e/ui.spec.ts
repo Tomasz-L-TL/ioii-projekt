@@ -1,110 +1,311 @@
-import { expect, test } from '@playwright/test';
+import {
+  test,
+  expect,
+  login,
+  goToWeek,
+  slot,
+  openBooking,
+  saveBooking,
+} from './fixtures';
 
-test('nawigacja podglądu, historia i trwały motyw bez sesji', async ({
+test('bez sesji bezpośrednie hashe nie ujawniają danych, motyw pozostaje', async ({
   page,
 }) => {
-  const businessRequests: string[] = [];
+  const reads: string[] = [];
   page.on('request', (request) => {
-    if (new URL(request.url()).pathname.startsWith('/api/'))
-      businessRequests.push(request.url());
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/api/')) reads.push(path);
   });
-  await page.goto('/');
-  await expect(page.getByLabel('Login / e-mail')).toHaveAttribute(
-    'readonly',
-    '',
-  );
-  await page.getByRole('link', { name: 'Podgląd studenta →' }).click();
-  await page
-    .getByRole('navigation')
-    .getByRole('link', { name: 'Moje rezerwacje' })
-    .click();
-  await expect(
-    page.getByRole('heading', { name: 'Moje rezerwacje', exact: true }),
-  ).toBeFocused();
-  await page.goBack();
-  await expect(
-    page.getByRole('heading', { name: 'Kalendarz studenta', exact: true }),
-  ).toBeVisible();
-  await page.getByLabel('Tryb podglądu').selectOption('admin');
-  await expect(
-    page.getByRole('heading', { name: 'Zarządzanie salami', exact: true }),
-  ).toBeVisible();
+  for (const hash of ['UI-02', 'UI-03', 'UI-04', 'UI-07']) {
+    await page.goto(`/#${hash}`);
+    await expect(
+      page.getByRole('button', { name: 'Zaloguj', exact: true }),
+    ).toBeVisible();
+    await expect(page.locator('.calendar-table')).toHaveCount(0);
+    await expect(page.getByRole('navigation').getByRole('link')).toHaveCount(0);
+  }
+  expect((await page.request.get('/api/auth/me')).status()).toBe(401);
+  expect(reads.every((path) => path === '/api/auth/me')).toBe(true);
   await page.getByRole('button', { name: 'Włącz ciemny motyw' }).click();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([
     'roombook-theme',
   ]);
-  expect(businessRequests).toEqual([]);
+  expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual([]);
 });
 
-test('kalendarz 5 × 16, dwa sloty i dialog obsługiwany klawiaturą', async ({
+test('błędny login, prawdziwa sesja po reload, historia i ochrona roli', async ({
   page,
 }) => {
-  await page.goto('/#UI-02');
+  await page.goto('/');
+  await page.getByLabel('Login / e-mail').fill('anna.nowak@roombook.test');
+  await page
+    .getByLabel('Hasło', { exact: true })
+    .fill('incorrect-test-password');
+  await page.getByRole('button', { name: 'Zaloguj', exact: true }).click();
+  await expect(
+    page
+      .getByRole('alert')
+      .filter({ hasText: 'Nieprawidłowy e-mail lub hasło.' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Hasło', { exact: true })).toHaveValue('');
+  const adminRequests: string[] = [];
+  page.on('request', (r) => {
+    if (new URL(r.url()).pathname.startsWith('/api/admin'))
+      adminRequests.push(r.url());
+  });
+  await login(page);
+  await page.reload();
+  await expect(page.locator('.calendar-table td')).toHaveCount(80);
+  const cookies = await page.context().cookies();
+  const session = cookies.find((cookie) => cookie.name === 'roombook_session');
+  expect(session?.httpOnly).toBe(true);
+  expect(session?.path).toBe('/api');
+  await page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Moje rezerwacje' })
+    .click();
+  await expect(page.locator('.page-heading h2')).toBeFocused();
+  await page.goBack();
+  await expect(page.locator('.page-heading h2')).toHaveText(
+    'Kalendarz studenta',
+  );
+  for (const hash of ['UI-04', 'UI-05', 'UI-06', 'UI-07', 'UI-01']) {
+    await page.evaluate((hash) => {
+      window.location.hash = hash;
+    }, hash);
+    await expect(page).toHaveURL(/#UI-02$/);
+    await expect(page.locator('.page-heading h2')).toHaveText(
+      'Kalendarz studenta',
+    );
+    await expect(page.getByLabel('Hasło', { exact: true })).toHaveCount(0);
+  }
+  expect(adminRequests).toEqual([]);
+  expect((await page.request.get('/api/admin/bookings')).status()).toBe(403);
+});
+
+test('kalendarz 5 × 16, prawdziwe stany, sale i czytanie poza horyzontem', async ({
+  page,
+  data,
+  request,
+  jan,
+}) => {
+  const room = data.rooms[0]!;
+  expect(
+    (
+      await jan.post('/api/bookings', {
+        data: {
+          roomId: room.id,
+          date: data.date,
+          startHour: 7,
+          durationSlots: 1,
+        },
+      })
+    ).status(),
+  ).toBe(201);
+  const preview = await request.get('/api/admin/blocks/preview', {
+    params: {
+      roomId: room.id,
+      date: data.date,
+      startHour: 8,
+      durationSlots: 2,
+    },
+  });
+  expect(preview.status()).toBe(200);
+  const impact = (await preview.json()) as {
+    expectedCancellationIds: number[];
+    confirmationToken: string;
+  };
+  expect(
+    (
+      await request.post('/api/admin/blocks', {
+        data: {
+          roomId: room.id,
+          date: data.date,
+          startHour: 8,
+          durationSlots: 2,
+          confirmed: true,
+          expectedCancellationIds: impact.expectedCancellationIds,
+          confirmationToken: impact.confirmationToken,
+        },
+      })
+    ).status(),
+  ).toBe(201);
+  await login(page);
+  await goToWeek(page, data.date);
+  await expect(page.getByLabel('Aktywna sala').locator('option')).toHaveCount(
+    8,
+  );
   await expect(page.locator('.calendar-table tbody tr')).toHaveCount(16);
-  await expect(page.locator('.calendar-table tbody td')).toHaveCount(80);
-  await expect(page.locator('td.reserved')).toHaveCount(2);
-  await expect(
-    page.getByLabel('Aktywna sala').locator('option[value="C-302"]'),
-  ).toHaveCount(0);
-  const slot = page.getByRole('button', {
-    name: 'Czwartek, 22.10.2026, 14:00: Wolny',
-    exact: true,
-  });
-  await slot.focus();
-  await page.keyboard.press('Space');
+  await expect(slot(page, data.date, 7)).toHaveAccessibleName(/Zarezerwowany/);
+  await expect(slot(page, data.date, 8)).toHaveAccessibleName(/Zablokowany/);
+  await page.getByLabel('Czas zajęć').selectOption('2');
+  await expect(slot(page, data.date, 22)).toBeDisabled();
+  await slot(page, data.date, 10).click();
   await expect(page.locator('td.selected')).toHaveCount(2);
+  await page.getByLabel('Aktywna sala').selectOption(String(data.rooms[1]!.id));
+  await expect(page.locator('td.selected')).toHaveCount(0);
+  await expect(slot(page, data.date, 7)).toHaveAccessibleName(/Wolny/);
+  for (let n = 0; n < 4; n++)
+    await page.getByRole('button', { name: 'Następny tydzień' }).click();
+  await expect(page.locator('.calendar-table td')).toHaveCount(80);
   await expect(
-    page.getByRole('button', { name: /Piątek, 23.10.2026, 22:00:/ }),
-  ).toBeDisabled();
-  const preview = page.getByRole('button', {
-    name: 'Podgląd potwierdzenia',
-    exact: true,
-  });
-  await preview.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog')).toBeVisible();
+    page.getByText('Terminy przeszłe i poza horyzontem', { exact: false }),
+  ).toBeVisible();
+  await expect(page.locator('.calendar-table td button:enabled')).toHaveCount(
+    0,
+  );
+  for (let n = 0; n < 6; n++)
+    await page.getByRole('button', { name: 'Poprzedni tydzień' }).click();
+  await expect(page.locator('td[data-status="PAST"]')).toHaveCount(80);
+});
+
+test('klawiatura: login, 45/90 min, potwierdzenie, anulowanie i wolny termin', async ({
+  page,
+  data,
+  jan,
+}) => {
+  await login(page, undefined, true);
+  await goToWeek(page, data.date);
+  await openBooking(page, data.date, 11, 1, true);
+  await expect(
+    page.getByRole('button', { name: 'Wróć', exact: true }),
+  ).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(
-    page.getByRole('button', { name: 'Potwierdź — tylko podgląd' }),
+    page.getByRole('button', { name: 'Potwierdź rezerwację', exact: true }),
   ).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(
-    page.getByRole('button', { name: 'Zamknij panel' }),
+    page.getByRole('button', { name: 'Wróć', exact: true }),
   ).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(preview).toBeFocused();
-  await page.getByLabel('Czas zajęć').selectOption('45');
+  await expect(
+    page.getByRole('button', { name: 'Zarezerwuj termin' }),
+  ).toBeFocused();
+  await page.keyboard.press('Enter');
+  const first = await saveBooking(page, true);
+  await expect(slot(page, data.date, 11)).toHaveAccessibleName(/Zarezerwowany/);
+  await openBooking(page, data.date, 14, 2, true);
+  const second = await saveBooking(page, true);
+  await expect(slot(page, data.date, 15)).toHaveAccessibleName(/Zarezerwowany/);
+  const own = (await (await page.request.get('/api/bookings/mine')).json()) as {
+    id: number;
+  }[];
+  expect(
+    own.filter((row) => [first.id, second.id].includes(row.id)),
+  ).toHaveLength(2);
+  const others = (await (await jan.get('/api/bookings/mine')).json()) as {
+    id: number;
+  }[];
+  expect(
+    others.some((row) => row.id === first.id || row.id === second.id),
+  ).toBe(false);
+  const nav = page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Moje rezerwacje' });
+  await nav.focus();
+  await page.keyboard.press('Enter');
+  const cancel = page
+    .locator(`tr[data-booking-id="${first.id}"]`)
+    .getByRole('button', { name: 'Anuluj', exact: true });
+  await cancel.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
+  await expect(cancel).toBeFocused();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Shift+Tab');
+  const response = page.waitForResponse(
+    (r) =>
+      r.url().endsWith(`/api/bookings/${first.id}/cancel`) &&
+      r.request().method() === 'POST',
+  );
+  await page.keyboard.press('Enter');
+  expect((await response).status()).toBe(200);
+  const row = page.locator(`tr[data-booking-id="${first.id}"]`);
+  await expect(row).toContainText('CANCELLED');
+  await row.getByText('Historia anulowania', { exact: true }).focus();
+  await page.keyboard.press('Space');
+  await expect(row).toContainText('STUDENT_CANCELLED');
+  await page.reload();
+  await page.getByRole('button', { name: 'Anulowane', exact: true }).click();
+  await expect(page.locator(`tr[data-booking-id="${first.id}"]`)).toContainText(
+    'CANCELLED',
+  );
   await page
-    .getByRole('button', {
-      name: 'Piątek, 23.10.2026, 22:00: Wolny',
-      exact: true,
-    })
-    .click();
-  await expect(page.locator('td.selected')).toHaveCount(1);
-  await expect(page.locator('.summary-card')).toContainText('22:00–22:45');
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Kalendarz' })
+    .focus();
+  await page.keyboard.press('Enter');
+  await goToWeek(page, data.date);
+  await expect(slot(page, data.date, 11)).toHaveAccessibleName(/Wolny/);
 });
 
-test('siedem ekranów w obu motywach przy 375 i 1280 px bez przewijania strony w poziomie', async ({
+test('rzeczywisty ADMIN widzi tylko prototyp bez wywołań biznesowych UI', async ({
   page,
 }) => {
+  const calls: string[] = [];
+  page.on('request', (r) => {
+    const path = new URL(r.url()).pathname;
+    if (path.startsWith('/api/') && !path.startsWith('/api/auth/'))
+      calls.push(path);
+  });
+  await login(page, 'admin@roombook.test');
+  for (const hash of ['UI-04', 'UI-05', 'UI-06', 'UI-07']) {
+    await page.goto(`/#${hash}`);
+    await expect(page.locator('.prototype-info')).toContainText(
+      'prototyp do etapu 10',
+    );
+  }
+  expect(calls).toEqual([]);
+  await page.getByRole('button', { name: 'Wyloguj', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Zaloguj', exact: true }),
+  ).toBeVisible();
+});
+
+test('siedem ekranów według ról, 375/1280 px i oba motywy bez przewijania strony', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
   for (const width of [375, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     for (const theme of ['light', 'dark']) {
       await page.goto('/');
       if ((await page.locator('html').getAttribute('data-theme')) !== theme)
         await page.getByRole('button', { name: /Włącz .* motyw/ }).click();
-      for (let index = 1; index <= 7; index++) {
-        await page.goto(`/#UI-0${index}`);
-        await expect(page.locator('.page-heading h2')).toBeVisible();
-        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      for (const role of ['student', 'admin']) {
+        await login(page, role === 'admin' ? 'admin@roombook.test' : undefined);
+        for (const screen of role === 'admin'
+          ? ['UI-04', 'UI-05', 'UI-06', 'UI-07']
+          : ['UI-02', 'UI-03']) {
+          await page.goto(`/#${screen}`);
+          await expect(page.locator('.page-heading h2')).toBeVisible();
+          if (screen === 'UI-02')
+            await expect(page.locator('.calendar-table td')).toHaveCount(80);
+          await expect(page.locator('html')).toHaveAttribute(
+            'data-theme',
+            theme,
+          );
+          expect(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= window.innerWidth,
+            ),
+            `${screen}, ${theme}, ${width}px`,
+          ).toBe(true);
+        }
+        await page
+          .getByRole('button', { name: 'Wyloguj', exact: true })
+          .click();
+        await expect(
+          page.getByRole('button', { name: 'Zaloguj', exact: true }),
+        ).toBeVisible();
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= window.innerWidth,
           ),
-          `UI-0${index}, ${theme}, ${width}px`,
         ).toBe(true);
       }
     }

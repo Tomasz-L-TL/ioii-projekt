@@ -6,17 +6,40 @@ const apiPort = Number(process.env.API_PORT ?? 3001);
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
+  // Scenariusze mutujące tę samą tymczasową bazę wykonują się kolejno.
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
   reporter: 'list',
-  use: { baseURL: `http://127.0.0.1:${webPort}`, trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: 'npm run dev',
-    url: `http://127.0.0.1:${webPort}`,
-    reuseExistingServer: false,
-    timeout: 30_000,
-    env: { WEB_PORT: String(webPort), API_PORT: String(apiPort) },
-  },
+  // Ślady sieci mogłyby zapisać hasło logowania. Hasło istnieje tylko w pamięci.
+  use: { baseURL: `http://127.0.0.1:${webPort}`, trace: 'off' },
+  projects: [
+    {
+      name: process.env.PLAYWRIGHT_CHANNEL ?? 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(process.env.PLAYWRIGHT_CHANNEL
+          ? { channel: process.env.PLAYWRIGHT_CHANNEL }
+          : {}),
+      },
+    },
+  ],
+  webServer: [
+    {
+      // Testy nie potrzebują watchera. Uruchamiamy ten sam entrypoint API.
+      command: 'node --import tsx apps/api/src/server.ts',
+      url: `http://127.0.0.1:${apiPort}/api/health`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+      env: { WEB_PORT: String(webPort), API_PORT: String(apiPort) },
+    },
+    {
+      command: 'npm run dev --workspace @roombook/web',
+      url: `http://127.0.0.1:${webPort}/api/health`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+      env: { WEB_PORT: String(webPort), API_PORT: String(apiPort) },
+    },
+  ],
 });
