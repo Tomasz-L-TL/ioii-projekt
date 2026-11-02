@@ -1,13 +1,13 @@
 # RoomBook — system rezerwacji sal na uczelni
 
-RoomBook to lokalna aplikacja rozwijana na przedmiot **Inżynieria Oprogramowania II**. **Etapy 07/08 dostarczają backend rezerwacji i administracji na rzeczywistej SQLite: sale, blokady, historia i anulowania, z ochroną współbieżnych zapisów oraz podpisanym podglądem skutków operacji masowych. Frontend nadal jest demonstracyjny i nie korzysta z API.** Integracja studenta i administratora należy do etapów 09/10. Projekt nie wymaga hostingu ani Dockera.
+RoomBook to lokalna aplikacja rozwijana na przedmiot **Inżynieria Oprogramowania II**. **Etapy 07/08 dostarczają backend rezerwacji i administracji na rzeczywistej SQLite: sale, blokady, historia i anulowania, z ochroną współbieżnych zapisów oraz podpisanym podglądem skutków operacji masowych. Etap 09 integruje frontend studenta z API: logowanie, tygodniowy kalendarz, rezerwowanie 45/90 min, własna historia, anulowanie i wylogowanie.** Administracyjne UI-04…07 pozostaje prototypem do etapu 10, tylko dla zalogowanego ADMIN, bez zapisu. Projekt nie wymaga hostingu ani Dockera.
 
 Podstawą jest [specyfikacja RoomBook 1.0](docs/SPECYFIKACJA_ROOMBOOK.md). Dokumentacja projektu:
 
 - Etap 02: [wymagania](docs/requirements/WYMAGANIA.md), [macierz spójności](docs/requirements/MACIERZ_SPOJNOSCI.md), [osiem przypadków użycia](docs/use-cases/PRZYPADKI_UZYCIA.md), [diagram UC](docs/use-cases/diagram-przypadkow-uzycia.puml).
 - Etap 03: [diagramy aktywności](docs/activities/DIAGRAMY_AKTYWNOSCI.md), [architektura C4](docs/architecture/ARCHITEKTURA_C4.md).
 - Etap 04: [model klas](docs/classes/MODEL_KLAS.md), [sekwencje](docs/sequences/DIAGRAMY_SEKWENCJI.md), [ERD i model danych](docs/data-model/MODEL_DANYCH.md), [projekt Prisma](docs/data-model/schema-plan.prisma). Projekt zachowano; cztery modele aktywowano w etapie 06.
-- Etap 05: [siedem makiet SVG](docs/ui/MAKIETY.md), [nawigacja WF/UC](docs/ui/NAWIGACJA.md). Widoki `/#UI-01`…`/#UI-07` mają fikcyjne dane i stałą datę 19.10.2026, 08:00 Europe/Warsaw. Działają filtry, nawigacja i trwały motyw. Formularz logowania jest tylko do odczytu, potwierdzenia niczego nie zapisują. Integracja UI z auth należy do etapu 09.
+- Etap 05: [siedem makiet SVG](docs/ui/MAKIETY.md), [nawigacja WF/UC](docs/ui/NAWIGACJA.md). SVG zachowują historyczny projekt etapu 05. React UI-01…03 korzysta teraz z sesji i rzeczywistych danych. Fikcyjne dane i zegar 19.10.2026 dotyczą tylko prototypów ADMIN UI-04…07.
 
 ## Środowisko i instalacja
 
@@ -78,7 +78,13 @@ Dla ADMIN powtórz z `admin@roombook.test`. Login/me zwracają tylko `{id,email,
 
 Sesja: `base64url({sub,exp}).base64url(HMAC-SHA256)`, TTL 8h, tylko cookie `roombook_session`: HttpOnly, SameSite=Lax, Path=/api, Max-Age=28800. `SESSION_SECRET` to 32 losowe bajty zapisane jako 64 znaki hex; brak lub błędny sekret zatrzymuje start API, bez fallbacku. Przy `NODE_ENV=production` cookie ma Secure i wymaga HTTPS; lokalny development dopuszcza HTTP na 127.0.0.1. `requireAuth` odczytuje aktualne konto i rolę z DB, `requireRole` egzekwuje 401/403. Token zawiera tylko ID i exp. Logout usuwa cookie z identycznymi Path/SameSite/Secure; **wcześniej skopiowany token pozostaje ważny do exp**, bez serwerowego rejestru unieważnień.
 
-POST wymaga application/json, maksymalnie 4 KiB i zaufanego Origin: 127.0.0.1 ze skonfigurowanymi portami web/API. Fetch Metadata odrzuca cross-site i przeglądarkowe żądania bez Origin; klienci terminalowi bez obu nagłówków są dozwoleni. Nie ma CORS z cookies. Frontend nadal ma demonstracyjne logowanie. Sekrety nie trafiają do localStorage, URL ani logów.
+POST wymaga application/json, maksymalnie 4 KiB i zaufanego Origin: 127.0.0.1 ze skonfigurowanymi portami web/API. Fetch Metadata odrzuca cross-site i przeglądarkowe żądania bez Origin; klienci terminalowi bez obu nagłówków są dozwoleni. Nie ma CORS z cookies. React sprawdza GET `/api/auth/me` przed pokazaniem danych i chroni hashe według roli z serwera. Sekrety nie trafiają do localStorage, URL ani logów.
+
+## Korzystanie ze ścieżki studenta (etap 09)
+
+Po przygotowaniu lokalnego `.env`, migracji i seeda według instrukcji powyżej uruchom `npm.cmd run dev`. Hasło odczytaj samodzielnie z ignorowanego `.env`; aplikacja go nie podpowiada. Zaloguj się na konto studenta, wybierz salę, tydzień i 45/90 min. Wybierz przyszły wolny slot i osobno potwierdź zapis. Komunikat zawiera ID z API; „Moje rezerwacje” pokazują własne wpisy i historię. Anulowanie wymaga potwierdzenia, zwalnia termin i zachowuje rekord w „Anulowane”. „Wyloguj” kończy sesję dopiero po odpowiedzi API.
+
+Dane odświeżają się po zapisie, anulowaniu, powrocie do okna i co minutę. Daty dotyczą Europe/Warsaw; tygodnie można przeglądać bez ograniczenia +14 dni, ale zapis poza horyzontem jest niedostępny. Backend rozstrzyga konflikty i limit. Po nieznanym wyniku sieci sprawdź listę przed następną próbą; mutacje nie są automatycznie ponawiane. Hashe nie nadają roli. Po 401 dane są usuwane z pamięci i pojawia się login; błąd początkowego odczytu sesji ma przycisk ponowienia. W storage pozostaje wyłącznie `roombook-theme`.
 
 ## Rezerwacje przez HTTP
 
@@ -130,7 +136,7 @@ npm.cmd audit --omit=dev
 
 Vitest/Supertest sprawdza auth, role, cookie, błędne wejścia, migrację, FK/CHECK/indeksy, idempotencję i rollback seeda oraz TC-05…14: czas Warszawy/DST, terminy 45/90, limity, konflikty sali/studenta/blokad, historię i anulowanie. Równoległe HTTP na dwóch klientach jednego pliku SQLite sprawdza kolizje, limit i pojedyncze anulowanie; test utrzymywanej blokady potwierdza rzeczywisty konflikt zapisu. Każda grupa integracyjna migruje oddzielny plik tymczasowy, używa losowego sekretu/hasła w pamięci, zamyka połączenia i usuwa pliki. Testy nie używają prywatnej lokalnej bazy ani daty makiet; granice czasu sprawdzają usługi z wstrzykiwanym zegarem.
 
-TC-15…21 dodają administracyjne DTO/role, walidację sal, podpis/ważność/powiązanie tokenów, nieaktualny dokładny zbiór (także ta sama liczba, inne ID), dezaktywację i blokady z anulowaniami. Każdy przypadek administracji ma własny migrowany plik SQLite. Wyścigi na dwóch klientach sprawdzają rezerwację wobec blokady/dezaktywacji, dwie zachodzące blokady, dwa potwierdzenia i admin-cancel wobec student-cancel; oprócz HTTP kontrolują trwałe tabele. Awaria DB, pominięty UPDATE i przekroczenie początku wycofują całą zmianę. React pozostaje bez integracji.
+TC-15…21 dodają administracyjne DTO/role, walidację sal, podpis/ważność/powiązanie tokenów, nieaktualny dokładny zbiór (także ta sama liczba, inne ID), dezaktywację i blokady z anulowaniami. Każdy przypadek administracji ma własny migrowany plik SQLite. Wyścigi na dwóch klientach sprawdzają rezerwację wobec blokady/dezaktywacji, dwie zachodzące blokady, dwa potwierdzenia i admin-cancel wobec student-cancel; oprócz HTTP kontrolują trwałe tabele. Awaria DB, pominięty UPDATE i przekroczenie początku wycofują całą zmianę. W etapie 08 React pozostawał bez integracji; ścieżkę studenta podłączono w etapie 09.
 
 Kontrola etapu 08: Node 24.20.0, npm 11.19.1, Prisma 7.10.1; **162/162 testy PASS**, bez pominięć (135 dotychczasowych + 27 administracji). Wykonano z powodzeniem `db:generate`, `db:validate`, `lint`, `typecheck`, `test`, `build`, `audit` i `audit --omit=dev`; oba audyty: 0 podatności. 423 obecne pakiety mają wersje zgodne z lockfile; `npm ci` nie było potrzebne. Nie instalowano przeglądarek ani nie uruchamiano E2E. Bez zmian zależności, migracji i frontendu.
 
@@ -138,19 +144,21 @@ Kontrola etapu 07 odbyła się na Node 24.20.0 i npm 12.2.1 (ostrzeżenie o dekl
 
 `build` tworzy `apps/web/dist` i `apps/api/dist`. Start zbudowanego API: `npm.cmd run start --workspace @roombook/api`. CI instaluje lockfile, generuje klienta przed importami, sprawdza lint, typy, schemat, testy i build; nie wymaga sekretów lokalnych ani przeglądarek. Audit jest informacyjny: wcześniejsze zgłoszenia wysokiego poziomu dotyczyły drzewa Prisma CLI. Nie uruchamiaj automatycznie `audit fix --force` ani nie zmieniaj głównych wersji Prisma.
 
-Playwright zachowuje cztery testy etapu 05: health przez proxy, nawigacja/motyw, kalendarz/klawiatura i siedem ekranów przy 375/1280 px w obu motywach. Skrypt E2E tworzy osobną migrowaną bazę i sekret w pamięci, a po zakończeniu serwerów usuwa pliki. Przy dostępnym Chromium:
+Playwright aktualizuje testy demonstracji do rzeczywistych sesji. [Scenariusze UI](tests/e2e/ui.spec.ts) i [studenta](tests/e2e/student.spec.ts) sprawdzają zapis 45/90 min, anulowanie i prywatność, 409/422/401, błędy odczytu i logout, role, klawiaturę, motyw oraz 375/1280 px. Runner tworzy unikalną migrowaną bazę tymczasową z zasianymi kontami i salami, losowym hasłem przekazanym wyłącznie do środowiska Node/Playwright i losowym sekretem. Jeden worker i cleanup przez API zapobiegają wyścigom scenariuszy. Po zakończeniu serwerów baza jest usuwana. Ślady sieci są wyłączone, aby nie utrwalać hasła. Runner oczekuje na health API przez proxy. Przy dostępnym Chromium:
 
 ```powershell
 npm.cmd run test:e2e
 ```
 
-Opcjonalna instalacja `npx.cmd playwright install chromium` wymaga sieci i osobnej decyzji. Można użyć `PLAYWRIGHT_BROWSERS_PATH` na innym dysku, zachowując tę samą wartość podczas instalacji i testów. Porty muszą być wolne. E2E demonstracyjnego UI nie zastępuje przyszłych testów funkcji biznesowych ani Chrome/Firefox. Artefakty błędów: ignorowany `test-results/`.
+Można użyć już zainstalowanego Edge: `$env:PLAYWRIGHT_CHANNEL = 'msedge'`, następnie `npm.cmd run test:e2e`. Po testach usuń zmienną: `Remove-Item Env:PLAYWRIGHT_CHANNEL`. Opcjonalna instalacja `npx.cmd playwright install chromium` wymaga sieci i osobnej decyzji. Można użyć `PLAYWRIGHT_BROWSERS_PATH` na innym dysku, zachowując tę samą wartość podczas instalacji i testów. Porty muszą być wolne. Wynik Edge nie jest wynikiem Chrome/Firefox. Administracja funkcjonalna, test obciążenia i rozszerzenie CI pozostają etapami 10/11. Artefakty błędów: ignorowany `test-results/`.
+
+Kontrola etapu 09 (2026-11-02, Windows, Node 24.20.0, npm 11.19.0): **173/173 Vitest PASS** (162 backendowe bez zmian + 11 frontendowych), **14/14 E2E PASS w Microsoft Edge** z rzeczywistym API i SQLite. Wykonano `db:generate`, `db:validate`, `lint`, `typecheck` i `build`. Pełny `npm audit`: **11 moderate** w narzędziach developerskich (minimatch i zależne narzędzia ESLint), kod 1; `audit --omit=dev`: **0 podatności**. Zależności nie były zmieniane. Nie instalowano przeglądarek; Chrome/Firefox i GitHub Actions niezweryfikowane. Administracyjne UI pozostaje etapem 10.
 
 ## Struktura i konwencje
 
 | Ścieżka                              | Odpowiedzialność                                                                          |
 | ------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `apps/web/src/`                      | Siedem demonstracyjnych ekranów React                                                     |
+| `apps/web/src/`                      | Rzeczywisty frontend studenta i cztery prototypy ADMIN                                    |
 | `apps/web/vite.config.ts`            | Port web i proxy API                                                                      |
 | `apps/api/src/app.ts`, `server.ts`   | Fabryka Express oraz uruchomienie i zamknięcie połączeń                                   |
 | `apps/api/src/auth/`                 | Sesja, bcrypt, normalizacja, AuthService, middleware i router                             |
@@ -159,7 +167,7 @@ Opcjonalna instalacja `npx.cmd playwright install chromium` wymaga sieci i osobn
 | `apps/api/src/db/`                   | Klient adaptera SQLite i atomowy seed                                                     |
 | `apps/api/src/config/`, `http/`      | Główny .env, ścieżki i bezpieczne błędy API                                               |
 | `prisma/`, `prisma.config.ts`        | Aktywny model, migracja i punkt startowy seeda                                            |
-| `tests/e2e/`, `playwright.config.ts` | Cztery testy UI etapu 05                                                                  |
+| `tests/e2e/`, `playwright.config.ts` | E2E rzeczywistej ścieżki studenta i prototypów według ról                                 |
 | `docs/`, `.github/workflows/ci.yml`  | Dokumentacja i CI                                                                         |
 
 TypeScript strict, ESM; API ma NodeNext i importy `.js`, frontend używa Bundler. Kod ma angielskie nazwy, dokumentacja i interfejs są polskie. ESLint i Prettier: `npm.cmd run format`. Specyfikacja jest wyłączona z formatowania. `.env`, SQLite i pliki pomocnicze, klient generowany, zależności, buildy, cache i raporty testów są ignorowane przez Git. `.env.example` zawiera wyłącznie nazwy i niesekretne wartości.

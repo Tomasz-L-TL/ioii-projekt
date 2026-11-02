@@ -12,6 +12,17 @@ Siedem autorskich SVG przedstawia projekt P1, nie działający system rezerwacji
 | UI-06 | Administrator          | Blokady i skutki anulowań                    | UC-07; WF-14, WF-15                      | [Blokady](wireframes/UI-06-blokady-admin.svg)                           |
 | UI-07 | Administrator          | Wskazanie studenta i terminu                 | UC-02, UC-03; WF-02, WF-03, WF-05, WF-06 | [Rezerwacja dla studenta](wireframes/UI-07-rezerwacja-dla-studenta.svg) |
 
+## Makieta a implementacja etapu 09
+
+Opisy ekranów i porównanie etapu 05 poniżej zachowano jako historię projektu. SVG nie zmieniano. Aktualny przepływ opisuje [nawigacja](NAWIGACJA.md).
+
+| Ekran    | Historyczna makieta                          | React w etapie 09                                                                                                          |
+| -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| UI-01    | Pola tylko do odczytu, przełączanie podglądu | Kontrolowane pola, POST login, cookie, GET me, prawdziwy logout, brak przełącznika roli                                    |
+| UI-02    | Stała data i fikcyjne zajętości              | Rzeczywiste aktywne sale, tygodnie Warszawy, snapshot API, 45/90 min, potwierdzenie i trwały zapis, konflikty i ponowienie |
+| UI-03    | Fikcyjny Student 01 i przykładowe anulowania | Własne DTO, stany serwera, trzy filtry, inicjator, potwierdzone anulowanie i zachowana historia                            |
+| UI-04…07 | Dane fikcyjne i działania bez zapisu         | Nadal prototyp do etapu 10; tylko dla zalogowanego ADMIN, bez wywołań biznesowego API                                      |
+
 ## UI-01 — Logowanie
 
 Login/e-mail i hasło są wyłącznie ilustracją pól: w podglądzie React są tylko do odczytu, nie zbierają poświadczeń. Przycisk otwiera informację o braku logowania. Do pozostałych ekranów prowadzi jawny wybór podglądu roli, bez tworzenia sesji.
@@ -78,7 +89,7 @@ Stan pusty: brak studentów lub aktywnych sal. Błąd: konflikt sali/właścicie
 
 ## Makieta a interaktywny frontend etapu 05
 
-| Obszar           | SVG                                            | React obecnie                                                          | Przyszła integracja 06–10                    |
+| Obszar           | SVG                                            | React w etapie 05                                                      | Przyszła integracja 06–10                    |
 | ---------------- | ---------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------- |
 | Układ            | Statyczny wspólny szkielet, przykładowe panele | Responsywna nawigacja, siedem ekranów, hash i historia                 | Zachowanie układu przy integracji            |
 | Terminy          | Przykładowy tydzień i podwójne sloty           | Pełne 5 × 16, zmiana tygodnia/sali/długości, wybór                     | Rzeczywista dostępność i walidacja API       |

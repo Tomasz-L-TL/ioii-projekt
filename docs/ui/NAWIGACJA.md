@@ -1,4 +1,20 @@
-# RoomBook — nawigacja etapu 05
+# RoomBook — nawigacja
+
+## Stan implementacji etapu 09
+
+Role pochodzą wyłącznie z API. Przy starcie i odświeżeniu GET `/api/auth/me` poprzedza render chronionej treści: ładowanie → sesja, 401 → login, pozostały błąd → komunikat z ponowieniem. UI-01 ma rzeczywisty formularz; STUDENT po login trafia do UI-02, ADMIN do UI-04. Wejście zalogowanego na UI-01 wraca do punktu wejścia roli i nie zastępuje wylogowania. Hashe, Back/Forward i bezpośrednie linki są chronione także w renderze; hash nie przełącza tożsamości.
+
+Student — rzeczywiste dane: UI-02 ↔ UI-03. Kalendarz odczytuje aktywne sale i dostępność 5×16 w Europe/Warsaw. Wybór 45/90 min → podsumowanie zajęć i zajętości → osobne potwierdzenie → POST rezerwacji. 201 odświeża kalendarz i własną listę; konflikt odświeża dostępność bez komunikatu sukcesu. Tydzień poza +14 dni pozostaje czytelny, zapis jest niedozwolony. Własna lista filtruje serwerowe UPCOMING, STARTED/COMPLETED i CANCELLED. Akcja anulowania zależy od `canCancel`; potwierdzenie → POST z `{}` → aktualna lista i historia, bez usuwania wpisu.
+
+Każdy odczyt ma ładowanie, pusty stan lub błąd z ponowieniem. 401 podczas pracy usuwa prywatne dane i pokazuje wygaśnięcie sesji; 403 pozostawia sesję i pokazuje odmowę. „Wyloguj” wysyła POST `/api/auth/logout`; dopiero 204 usuwa stan. Błąd sieci pozostawia sesję i umożliwia ponowienie. Żądania poprzednich widoków i sesji są unieważniane; dane kont i rezerwacji pozostają tylko w pamięci. Jedyny trwały klucz UI to `roombook-theme`.
+
+Administrator — prototyp do etapu 10: UI-04…07 są dostępne tylko dla rzeczywistego ADMIN, z jawnym oznaczeniem danych fikcyjnych. Nawigacja i dialogi demonstracyjne pozostają; UI nie wywołuje administracyjnych odczytów ani mutacji. Student nie otrzymuje tych ekranów.
+
+Zachowano skip-link, fokus tytułu po przejściu, natywne dialogi z Escape i przywracaniem fokusu, tekstowe stany slotów i lokalne przewijanie tabel. Okresowe odświeżanie i powrót do okna pobierają aktualne stany z API; klient nie wylicza trwałych statusów.
+
+## Historyczna nawigacja makiet etapu 05
+
+Poniższy opis dokumentuje pierwotny prototyp. Aktualne działanie UI-01…03 i ochronę ról opisano powyżej.
 
 Wszystkie adresy to fragmenty jednej aplikacji SPA, np. `/#UI-02`. Odświeżenie i historia przeglądarki zachowują wybrany ekran. Nieznany fragment pokazuje UI-01. Podgląd roli jest wyznaczany przez ekran; otwarcie bezpośredniego odnośnika administratora zmienia wyłącznie prezentację. Nie istnieje sesja ani uwierzytelnienie.
 
