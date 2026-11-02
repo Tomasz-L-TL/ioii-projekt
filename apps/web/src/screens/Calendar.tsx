@@ -1,135 +1,216 @@
-import { useState } from 'react';
-import { StateExamples, type ShowPreview } from '../components/Preview';
+import { useCallback, useRef, useState } from 'react';
+import type { Api } from '../api';
+import { ApiError, errorMessage } from '../api/client';
+import type { AvailabilityDto, BookingInput, SlotStatus } from '../api/types';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
-  dateAt,
+  addDays,
   formatDate,
-  hours,
   lessonRange,
-  rooms,
+  monday,
   time,
-  weekdays,
-} from '../demo/data';
+  warsawToday,
+} from '../dates';
+import { useLifetime, useResource } from '../useResource';
 
-type SlotState = 'free' | 'reserved' | 'blocked' | 'forbidden' | 'selected';
-const labels: Record<SlotState, string> = {
-  free: 'Wolny',
-  reserved: 'Zarezerwowany',
-  blocked: 'Zablokowany',
-  forbidden: 'Niedozwolony',
-  selected: 'Wybrany',
+const labels: Record<SlotStatus, string> = {
+  AVAILABLE: 'Wolny',
+  RESERVED: 'Zarezerwowany',
+  BLOCKED: 'Zablokowany',
+  INACTIVE: 'Sala nieaktywna',
+  PAST: 'Przeszły',
 };
+const styles: Record<SlotStatus, string> = {
+  AVAILABLE: 'free',
+  RESERVED: 'reserved',
+  BLOCKED: 'blocked',
+  INACTIVE: 'inactive',
+  PAST: 'past',
+};
+type Selection = BookingInput & { snapshot: AvailabilityDto };
 
-export function Calendar({ showPreview }: { showPreview: ShowPreview }) {
-  const [room, setRoom] = useState('A-101');
-  const [week, setWeek] = useState(0);
-  const [minutes, setMinutes] = useState(90);
-  const [selection, setSelection] = useState<{
-    day: number;
-    hour: number;
-  } | null>(null);
-  const slots = minutes === 90 ? 2 : 1;
-  function baseState(day: number, hour: number): SlotState {
-    // Wyłącznie schemat prezentacyjny; nie sprawdza rzeczywistych konfliktów.
-    const offset = week * 7 + day;
-    if (offset < 0 || offset > 14 || (offset === 0 && hour <= 8))
-      return 'forbidden';
-    if (day === 1 && (hour === 9 || hour === 10)) return 'reserved';
-    if (day === 2 && (hour === 12 || hour === 13)) return 'blocked';
-    return 'free';
-  }
-  function stateAt(day: number, hour: number): SlotState {
-    const base = baseState(day, hour);
-    if (base !== 'free') return base;
-    if (
-      selection?.day === day &&
-      hour >= selection.hour &&
-      hour < selection.hour + slots
-    )
-      return 'selected';
-    if (minutes === 90 && (hour === 22 || baseState(day, hour + 1) !== 'free'))
-      return 'forbidden';
-    return 'free';
-  }
-  const summary = selection ? (
-    <>
-      <p>
-        <strong>
-          {room} · {weekdays[selection.day]},{' '}
-          {formatDate(dateAt(week * 7 + selection.day))}
-        </strong>
-      </p>
-      <p>
-        Zajęcia {lessonRange(selection.hour, minutes)} · {minutes} min
-        <br />
-        Zajętość {time(selection.hour)}–{time(selection.hour + slots)} ·{' '}
-        {slots * 60} min ({slots === 1 ? '1 slot' : '2 sloty'})
-      </p>
-      <p>Właściciel i inicjator: Student 01 (fikcyjny).</p>
-    </>
-  ) : (
-    <p>
-      Wybierz wolny termin w kalendarzu, aby zobaczyć czas zajęć i zajętość
-      sali.
-    </p>
+export function Calendar({
+  api,
+  revision,
+  onChanged,
+}: {
+  api: Api;
+  revision: number;
+  onChanged: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
+  const rooms = useResource(api.rooms, revision, confirming || pending);
+  const [chosenRoom, setChosenRoom] = useState<number | null>(null);
+  const room =
+    rooms.data?.find((item) => item.id === chosenRoom) ?? rooms.data?.[0];
+  const roomId = room?.id;
+  const [week, setWeek] = useState(() => monday());
+  const [duration, setDuration] = useState<1 | 2>(1);
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const sending = useRef(false);
+  const lifetime = useLifetime();
+  const load = useCallback(
+    async (signal: AbortSignal) =>
+      roomId === undefined ? null : api.availability(roomId, week, signal),
+    [api, roomId, week],
   );
-
+  const availability = useResource(load, revision, confirming || pending);
+  const snapshot = availability.data;
+  const selected =
+    selection?.snapshot === snapshot &&
+    selection?.roomId === roomId &&
+    selection?.durationSlots === duration
+      ? selection
+      : null;
+  const today = warsawToday();
+  const horizon = addDays(today, 14);
+  const allowedDate = (date: string) => date >= today && date <= horizon;
+  const noFree =
+    snapshot &&
+    !snapshot.days.some((day) =>
+      day.slots.some((slot) =>
+        duration === 1 ? slot.available45 : slot.available90 && slot.fits90,
+      ),
+    );
+  const clear = () => {
+    setSelection(null);
+    setConfirming(false);
+    setError('');
+    setNotice('');
+  };
+  const summary =
+    selected && room ? (
+      <>
+        <p>
+          <strong>
+            {room.roomNumber} · {room.name || 'Sala bez nazwy'} ·{' '}
+            {room.capacity} miejsc
+          </strong>
+        </p>
+        <p>
+          {formatDate(selected.date, true)}, {time(selected.startHour)} ·
+          Europe/Warsaw
+        </p>
+        <p>
+          Zajęcia {lessonRange(selected.startHour, duration === 1 ? 45 : 90)} ·{' '}
+          {duration === 1 ? 45 : 90} min
+          <br />
+          Zajętość {time(selected.startHour)}–
+          {time(selected.startHour + duration)} · {duration * 60} min (
+          {duration} {duration === 1 ? 'slot' : 'sloty'})
+        </p>
+      </>
+    ) : (
+      <p>Wybierz przyszły wolny termin w kalendarzu.</p>
+    );
+  async function book() {
+    if (!selected || sending.current || !allowedDate(selected.date)) return;
+    sending.current = true;
+    setPending(true);
+    setError('');
+    const signal = lifetime.current.signal;
+    try {
+      // Wyłącznie cztery pola kontraktu; właściciel wynika z sesji.
+      const result = await api.book(
+        {
+          roomId: selected.roomId,
+          date: selected.date,
+          startHour: selected.startHour,
+          durationSlots: selected.durationSlots,
+        },
+        signal,
+      );
+      if (signal.aborted) return;
+      setNotice(
+        `Zapisano rezerwację #${result.id}: ${result.room.roomNumber}, ${formatDate(result.date)}, ${time(result.startHour)}, ${result.lessonMinutes} min zajęć / ${result.occupiedMinutes} min zajętości.`,
+      );
+      setSelection(null);
+      setConfirming(false);
+      onChanged();
+    } catch (error) {
+      if (signal.aborted) return;
+      setError(
+        `${errorMessage(error)}${error instanceof ApiError && (error.status === 0 || error.code === 'INVALID_RESPONSE') ? ' Wynik zapisu jest nieznany. Sprawdź „Moje rezerwacje” przed kolejną próbą.' : ''}`,
+      );
+      setConfirming(false);
+      setSelection(null);
+      onChanged();
+      if (
+        error instanceof ApiError &&
+        ['ROOM_INACTIVE', 'ROOM_NOT_FOUND'].includes(error.code)
+      )
+        rooms.refresh();
+    } finally {
+      sending.current = false;
+      if (!signal.aborted) setPending(false);
+    }
+  }
   return (
     <>
       <div className="card calendar-controls">
         <label>
           Aktywna sala
           <select
-            value={room}
+            value={roomId ?? ''}
+            disabled={!rooms.data?.length || pending}
             onChange={(event) => {
-              setRoom(event.target.value);
-              setSelection(null);
+              setChosenRoom(Number(event.target.value));
+              clear();
             }}
           >
-            {rooms
-              .filter((item) => item.active)
-              .map((item) => (
-                <option key={item.number} value={item.number}>
-                  {item.number} · {item.name || 'Sala bez nazwy'} ·{' '}
-                  {item.capacity} miejsc
-                </option>
-              ))}
+            {!rooms.data?.length && (
+              <option value="">
+                {rooms.loading ? 'Wczytywanie sal…' : 'Brak sal'}
+              </option>
+            )}
+            {rooms.data?.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.roomNumber} · {item.name || 'Sala bez nazwy'} ·{' '}
+                {item.capacity} miejsc
+              </option>
+            ))}
           </select>
         </label>
         <label>
           Czas zajęć
           <select
-            value={minutes}
+            value={duration}
+            disabled={pending}
             onChange={(event) => {
-              setMinutes(Number(event.target.value));
-              setSelection(null);
+              setDuration(event.target.value === '2' ? 2 : 1);
+              clear();
             }}
           >
-            <option value={45}>45 min · 1 slot (60 min)</option>
-            <option value={90}>90 min · 2 sloty (120 min)</option>
+            <option value={1}>45 min · 1 slot (60 min)</option>
+            <option value={2}>90 min · 2 sloty (120 min)</option>
           </select>
         </label>
         <div className="week-picker">
           <span className="field-label">Tydzień</span>
           <div className="actions">
             <button
-              onClick={() => {
-                setWeek(week - 1);
-                setSelection(null);
-              }}
+              disabled={pending}
               aria-label="Poprzedni tydzień"
+              onClick={() => {
+                setWeek(addDays(week, -7));
+                clear();
+              }}
             >
               ←
             </button>
             <span>
-              {formatDate(dateAt(week * 7))} –{' '}
-              {formatDate(dateAt(week * 7 + 4))}
+              {formatDate(week)} – {formatDate(addDays(week, 4))}
             </span>
             <button
-              onClick={() => {
-                setWeek(week + 1);
-                setSelection(null);
-              }}
+              disabled={pending}
               aria-label="Następny tydzień"
+              onClick={() => {
+                setWeek(addDays(week, 7));
+                clear();
+              }}
             >
               →
             </button>
@@ -137,96 +218,163 @@ export function Calendar({ showPreview }: { showPreview: ShowPreview }) {
         </div>
       </div>
       <p className="muted">
-        Schemat fikcyjnych rezerwacji i blokad powtarza się dla każdej sali i
-        tygodnia. Niedozwolone terminy zilustrowano względem zegara demo. API
-        dopiero zweryfikuje dostępność, limit 3 oraz +14 dni.
+        Dostępność jest wstępna. API przy zapisie sprawdza także konflikty z
+        innymi salami i limit 3 przyszłych rezerwacji. Możesz przeglądać każdy
+        tydzień; zapis tylko do {formatDate(horizon)} włącznie.
       </p>
-      <div className="legend" aria-label="Legenda kalendarza">
-        {Object.entries(labels).map(([state, label]) => (
-          <span className={`legend-item ${state}`} key={state}>
-            <i />
-            {label}
-          </span>
-        ))}
+      <div role="status">
+        {rooms.loading
+          ? 'Wczytuję sale…'
+          : rooms.data?.length === 0
+            ? 'Brak aktywnych sal. Rezerwacja nie jest możliwa.'
+            : room && availability.loading
+              ? 'Wczytuję dostępność…'
+              : noFree
+                ? 'Brak wolnych terminów dla wybranej długości.'
+                : ''}
       </div>
-      <div
-        className="table-scroll calendar-scroll"
-        tabIndex={0}
-        role="region"
-        aria-label="Kalendarz tygodniowy — przewijaj poziomo na małym ekranie"
-      >
-        <table className="calendar-table">
-          <caption>
-            Pełne starty 07:00–22:00 · poniedziałek–piątek · Europe/Warsaw
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Start</th>
-              {weekdays.map((day, index) => (
-                <th scope="col" key={day}>
-                  {day}
-                  <small>{formatDate(dateAt(week * 7 + index))}</small>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {hours.map((hour) => (
-              <tr key={hour}>
-                <th scope="row">{time(hour)}</th>
-                {weekdays.map((day, index) => {
-                  const state = stateAt(index, hour);
-                  const isPair = state === 'reserved' || state === 'selected';
-                  const part =
-                    state === 'reserved'
-                      ? hour - 8
-                      : selection
-                        ? hour - selection.hour + 1
-                        : 1;
-                  const paired =
-                    isPair && (state === 'reserved' || slots === 2);
-                  const detail = paired
-                    ? `${state === 'reserved' ? '90 min' : 'Wybór'} · slot ${part}/2`
-                    : labels[state];
-                  const forbiddenReason =
-                    hour === 22 && minutes === 90
-                      ? '22:00 nie jest startem 90-minutowym'
-                      : 'Przykład ograniczenia terminu lub braku dwóch wolnych slotów';
-                  return (
-                    <td
-                      key={day}
-                      className={`${state}${paired ? ' paired' : ''}`}
-                    >
-                      <button
-                        type="button"
-                        disabled={state !== 'free' && state !== 'selected'}
-                        aria-pressed={state === 'selected'}
-                        aria-label={`${day}, ${formatDate(dateAt(week * 7 + index))}, ${time(hour)}: ${detail}${state === 'forbidden' ? `. ${forbiddenReason}` : ''}`}
-                        onClick={() =>
-                          setSelection({
-                            day: index,
-                            hour:
-                              state === 'selected' && selection
-                                ? selection.hour
-                                : hour,
-                          })
-                        }
-                      >
-                        <span>{detail}</span>
-                        {paired && (
-                          <small>
-                            {state === 'reserved' ? 'Zarezerwowany' : 'Wybrany'}
-                          </small>
-                        )}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
+      {rooms.error && (
+        <div role="alert" className="notice">
+          {rooms.error}
+          <button onClick={rooms.refresh}>Ponów odczyt sal</button>
+        </div>
+      )}
+      {room && availability.error && (
+        <div role="alert" className="notice">
+          {availability.error}
+          <button
+            onClick={() => {
+              rooms.refresh();
+              availability.refresh();
+            }}
+          >
+            Ponów odczyt dostępności i sal
+          </button>
+        </div>
+      )}
+      <p role="status">{notice}</p>
+      <p role="alert">{error}</p>
+      {snapshot && (
+        <>
+          {snapshot.days.some((day) => !allowedDate(day.date)) && (
+            <p className="notice">
+              Terminy przeszłe i poza horyzontem +14 dni można oglądać, ale nie
+              można ich rezerwować.
+            </p>
+          )}
+          <div className="legend" aria-label="Legenda kalendarza">
+            {Object.entries(labels).map(([status, label]) => (
+              <span
+                className={`legend-item ${styles[status as SlotStatus]}`}
+                key={status}
+              >
+                <i />
+                {label}
+              </span>
             ))}
-          </tbody>
-        </table>
-      </div>
+            <span className="legend-item selected">
+              <i />
+              Wybrany
+            </span>
+          </div>
+          <div
+            className="table-scroll calendar-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label="Kalendarz tygodniowy — przewijaj poziomo na małym ekranie"
+          >
+            <table className="calendar-table">
+              <caption>
+                Pełne starty 07:00–22:00 · poniedziałek–piątek · Europe/Warsaw
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Start</th>
+                  {snapshot.days.map((day) => (
+                    <th scope="col" key={day.date}>
+                      {formatDate(day.date, true)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 16 }, (_, index) => index + 7).map(
+                  (hour) => (
+                    <tr key={hour}>
+                      <th scope="row">{time(hour)}</th>
+                      {snapshot.days.map((day) => {
+                        const slot = day.slots[hour - 7]!;
+                        const chosen =
+                          selected?.date === day.date &&
+                          hour >= selected.startHour &&
+                          hour < selected.startHour + duration;
+                        const available =
+                          duration === 1
+                            ? slot.available45
+                            : slot.available90 && slot.fits90;
+                        const reason = !allowedDate(day.date)
+                          ? day.date > horizon
+                            ? 'Poza horyzontem +14 dni'
+                            : 'Data przeszła'
+                          : !available && slot.status === 'AVAILABLE'
+                            ? hour === 22 && duration === 2
+                              ? '22:00 nie jest startem 90-minutowym'
+                              : 'Brak dwóch wolnych slotów'
+                            : '';
+                        return (
+                          <td
+                            key={day.date}
+                            data-date={day.date}
+                            data-hour={hour}
+                            data-status={slot.status}
+                            className={`${chosen ? 'selected' : styles[slot.status]}${chosen && duration === 2 ? ' paired' : ''}`}
+                          >
+                            <button
+                              type="button"
+                              disabled={
+                                pending ||
+                                !allowedDate(day.date) ||
+                                (!available && !chosen)
+                              }
+                              aria-pressed={Boolean(chosen)}
+                              aria-label={`${formatDate(day.date, true)}, ${time(hour)}: ${labels[slot.status]}${slot.past ? ', przeszły' : ''}, ${duration === 1 ? 45 : 90} min zajęć${reason ? `. ${reason}` : ''}${chosen ? ', wybrany' : ''}`}
+                              onClick={() => {
+                                setSelection({
+                                  roomId: snapshot.roomId,
+                                  date: day.date,
+                                  startHour:
+                                    chosen && selected
+                                      ? selected.startHour
+                                      : hour,
+                                  durationSlots: duration,
+                                  snapshot,
+                                });
+                                setConfirming(false);
+                                setError('');
+                                setNotice('');
+                              }}
+                            >
+                              <span>
+                                {chosen
+                                  ? `Wybrany · slot ${hour - selected!.startHour + 1}/${duration}`
+                                  : labels[slot.status]}
+                              </span>
+                              {slot.past && slot.status !== 'PAST' && (
+                                <small>Przeszły</small>
+                              )}
+                              {reason && <small>{reason}</small>}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
       <div className="calendar-bottom">
         <section className="summary-card">
           <h3>Wybrany termin</h3>
@@ -235,24 +383,10 @@ export function Calendar({ showPreview }: { showPreview: ShowPreview }) {
           </div>
           <button
             className="primary"
-            disabled={!selection}
-            onClick={() =>
-              showPreview({
-                title: 'Projekt potwierdzenia rezerwacji',
-                content: (
-                  <>
-                    {summary}
-                    <p>
-                      Podgląd nie gwarantuje dostępności. Zapis i pełna
-                      weryfikacja reguł będą realizowane przez API.
-                    </p>
-                  </>
-                ),
-                confirm: true,
-              })
-            }
+            disabled={!selected || pending || !allowedDate(selected.date)}
+            onClick={() => setConfirming(true)}
           >
-            Podgląd potwierdzenia
+            Zarezerwuj termin
           </button>
         </section>
         <aside className="card">
@@ -262,17 +396,39 @@ export function Calendar({ showPreview }: { showPreview: ShowPreview }) {
             <br />
             90 min zajęć zajmuje 120 min sali.
           </p>
+          <p>Pozostały czas to bufor. 90 min zaznacza dwa sąsiednie sloty.</p>
           <p>
-            Pozostały czas to bufor. Rezerwacja 90 min jest pokazana w dwóch
-            sąsiednich komórkach.
+            Ostatni start 90 min to 21:00. O 22:00 możliwy jest wyłącznie start
+            45 min, z zajętością do 23:00.
           </p>
-          <p>
-            <strong>22:00 nie jest startem 90-minutowym.</strong> Ostatni start
-            to 21:00. Dla 45 min można wybrać 22:00, z zajętością do 23:00.
-          </p>
+          <button
+            disabled={pending}
+            onClick={() => {
+              clear();
+              rooms.refresh();
+              availability.refresh();
+            }}
+          >
+            Odśwież kalendarz
+          </button>
         </aside>
       </div>
-      <StateExamples showPreview={showPreview} />
+      {selected && confirming && (
+        <ConfirmDialog
+          title="Potwierdź rezerwację"
+          pending={pending}
+          error=""
+          onClose={() => setConfirming(false)}
+          onConfirm={book}
+          confirmLabel="Potwierdź rezerwację"
+        >
+          {summary}
+          <p>
+            Dostępność jest wstępna. Zatwierdzenie wyśle rezerwację do zapisu;
+            serwer ponownie sprawdzi wszystkie reguły.
+          </p>
+        </ConfirmDialog>
+      )}
     </>
   );
 }

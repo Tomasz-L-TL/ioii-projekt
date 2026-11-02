@@ -1,6 +1,16 @@
-import type { ShowPreview } from '../components/Preview';
+import { useRef, useState } from 'react';
+import { isUser } from '../api';
+import { errorMessage, request } from '../api/client';
+import type { UserDto } from '../api/types';
+import { useLifetime } from '../useResource';
 
-export function Login({ showPreview }: { showPreview: ShowPreview }) {
+export function Login({ onLogin }: { onLogin: (user: UserDto) => void }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+  const sending = useRef(false);
+  const lifetime = useLifetime();
   return (
     <div className="login-grid">
       <section className="welcome-panel">
@@ -11,8 +21,8 @@ export function Login({ showPreview }: { showPreview: ShowPreview }) {
           Zaplanuj naukę.
         </h3>
         <p>
-          Projekt lokalnej aplikacji do rezerwowania sal uczelnianych. Sprawdź
-          planowane ścieżki studenta i administratora.
+          Zaloguj się na przygotowane konto, sprawdź dostępność i zarezerwuj
+          salę do nauki.
         </p>
         <div className="room-illustration" aria-hidden="true">
           <span>A-101</span>
@@ -22,70 +32,70 @@ export function Login({ showPreview }: { showPreview: ShowPreview }) {
           <i />
           <div>Przestrzeń do wspólnej pracy</div>
         </div>
-        <p>Etap 05 / 12 · Projekt interfejsu</p>
+        <p>
+          Student — rzeczywiste dane
+          <br />
+          Administrator — prototyp do etapu 10
+        </p>
       </section>
       <section className="card">
-        <span className="eyebrow">UI-01 · Projekt formularza</span>
+        <span className="eyebrow">UI-01 · Twoje konto</span>
         <h3>Logowanie do RoomBook</h3>
-        <p>
-          Nie wpisuj prawdziwych poświadczeń. Pola są tylko do odczytu; podgląd
-          ich nie zbiera ani nie wysyła.
-        </p>
+        <p>Użyj danych konta przygotowanego lokalnie przez seed.</p>
         <form
-          onSubmit={(event) => {
+          aria-busy={pending}
+          onSubmit={async (event) => {
             event.preventDefault();
-            showPreview({
-              title: 'Podgląd logowania',
-              content: (
-                <p>
-                  Logowanie będzie dostępne po integracji z API. Do oglądania
-                  makiet użyj poniższych odnośników podglądu.
-                </p>
-              ),
-            });
+            if (sending.current) return;
+            sending.current = true;
+            setPending(true);
+            setError('');
+            const signal = lifetime.current.signal;
+            try {
+              const user = await request('/auth/login', isUser, {
+                signal,
+                body: { email, password },
+              });
+              if (!signal.aborted) onLogin(user);
+            } catch (error) {
+              if (!signal.aborted) setError(errorMessage(error));
+            } finally {
+              sending.current = false;
+              if (!signal.aborted) {
+                setPending(false);
+                setPassword('');
+              }
+            }
           }}
         >
           <label>
             Login / e-mail
             <input
-              type="text"
-              readOnly
-              value=""
-              placeholder="Pole demonstracyjne"
-              autoComplete="off"
+              type="email"
+              required
+              maxLength={254}
+              autoComplete="username"
+              value={email}
+              disabled={pending}
+              onChange={(event) => setEmail(event.target.value)}
             />
           </label>
           <label>
             Hasło
             <input
               type="password"
-              readOnly
-              value=""
-              placeholder="Pole demonstracyjne"
-              autoComplete="off"
+              required
+              autoComplete="current-password"
+              value={password}
+              disabled={pending}
+              onChange={(event) => setPassword(event.target.value)}
             />
           </label>
-          <button type="submit" className="primary">
-            Zaloguj — podgląd
+          <p role="alert">{error}</p>
+          <button type="submit" className="primary" disabled={pending}>
+            {pending ? 'Logowanie…' : 'Zaloguj'}
           </button>
         </form>
-        <p className="error-example">
-          <strong>Projekt stanu błędu</strong>
-          <br />
-          Niepoprawny login lub hasło.
-        </p>
-        <div className="preview-entry">
-          <h3>Przejdź do makiet</h3>
-          <p>Wybór prezentacji, bez konta i sesji.</p>
-          <div className="actions">
-            <a className="button primary" href="#UI-02">
-              Podgląd studenta →
-            </a>
-            <a className="button" href="#UI-04">
-              Podgląd administratora →
-            </a>
-          </div>
-        </div>
       </section>
     </div>
   );

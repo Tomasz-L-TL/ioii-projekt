@@ -695,6 +695,22 @@ summary {
 .calendar-table td.free {
   background: var(--surface);
 }
+.legend .past i,
+.calendar-table td.past {
+  background: var(--forbidden);
+  color: var(--forbidden-ink);
+}
+.legend .inactive i,
+.calendar-table td.inactive {
+  background: var(--forbidden);
+  color: var(--forbidden-ink);
+  outline: 1px dashed currentColor;
+  outline-offset: -3px;
+}
+.account-name {
+  margin-top: 24px;
+  overflow-wrap: anywhere;
+}
 .calendar-table td.paired {
   box-shadow: inset 4px 0 currentColor;
 }

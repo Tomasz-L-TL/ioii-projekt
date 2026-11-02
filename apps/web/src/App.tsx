@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { PreviewDialog, type Preview } from './components/Preview';
 import { demoClock, demoMessage, screens, type ScreenId } from './demo/data';
 import { Blocks, StudentBooking } from './screens/Administration';
-import { Calendar } from './screens/Calendar';
 import { Login } from './screens/Login';
-import { Reservations } from './screens/Reservations';
+import { Reservations as AdminReservations } from './screens/Reservations';
 import { Rooms } from './screens/Rooms';
+import { Student } from './screens/Student';
+import { useSession } from './useSession';
+import { errorMessage } from './api/client';
 
 function readScreen(): ScreenId {
   return (
@@ -13,7 +15,6 @@ function readScreen(): ScreenId {
     'UI-01'
   );
 }
-
 function readTheme(): 'light' | 'dark' {
   try {
     return localStorage.getItem('roombook-theme') === 'dark' ? 'dark' : 'light';
@@ -21,44 +22,68 @@ function readTheme(): 'light' | 'dark' {
     return 'light';
   }
 }
-
 export function App() {
-  const [screen, setScreen] = useState(readScreen);
+  const auth = useSession();
+  const [requested, setRequested] = useState(readScreen);
   const [theme, setTheme] = useState(readTheme);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [notice, setNotice] = useState('');
+  const [logoutError, setLogoutError] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutPending = useRef(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const session = auth.session;
+  const admin = session?.user.role === 'ADMIN';
+  // Ochrona zachodzi w renderze, zanim efekt znormalizuje hash.
+  const screen: ScreenId = !session
+    ? 'UI-01'
+    : admin
+      ? requested >= 'UI-04'
+        ? requested
+        : 'UI-04'
+      : requested === 'UI-02' || requested === 'UI-03'
+        ? requested
+        : 'UI-02';
   const current = screens.find((item) => item.id === screen)!;
-  const admin = screen >= 'UI-04';
-  const nav = screens.filter(
-    (item) =>
-      item.id !== 'UI-01' && (admin ? item.id >= 'UI-04' : item.id < 'UI-04'),
-  );
-
+  const nav = session
+    ? screens.filter((item) =>
+        admin ? item.id >= 'UI-04' : item.id === 'UI-02' || item.id === 'UI-03',
+      )
+    : [];
   useEffect(() => {
-    const onHashChange = () => {
-      setScreen(readScreen());
+    const change = () => {
+      setRequested(readScreen());
       setPreview(null);
       setNotice('');
     };
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    window.addEventListener('hashchange', change);
+    return () => window.removeEventListener('hashchange', change);
   }, []);
-
   useEffect(() => {
-    document.title = `${current.title} · RoomBook — podgląd`;
+    if (auth.checking || auth.error) return;
+    if (window.location.hash !== `#${screen}`)
+      window.history.replaceState(null, '', `#${screen}`);
+    setRequested(screen);
+  }, [screen, requested, auth.checking, auth.error]);
+  useEffect(() => {
+    document.title = `${auth.checking ? 'Sprawdzanie sesji' : current.title} · RoomBook`;
     titleRef.current?.focus();
-  }, [current]);
-
+  }, [current, auth.checking, session?.user.id]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
       localStorage.setItem('roombook-theme', theme);
     } catch {
-      /* Motyw działa też bez dostępnego magazynu. */
+      /* Motyw działa też bez magazynu. */
     }
   }, [theme]);
-
+  useEffect(() => {
+    setPreview(null);
+    setNotice('');
+    setLogoutError('');
+    setLoggingOut(false);
+    logoutPending.current = false;
+  }, [session]);
   return (
     <>
       <a
@@ -73,29 +98,23 @@ export function App() {
       </a>
       <div className="app-shell">
         <aside className="sidebar">
-          <a className="brand" href="#UI-01">
+          <a
+            className="brand"
+            href={admin ? '#UI-04' : session ? '#UI-02' : '#UI-01'}
+          >
             <span className="brand-mark" aria-hidden="true">
               R
             </span>
             <h1>RoomBook</h1>
           </a>
           <p className="brand-caption">Przestrzeń na Twoje plany</p>
-          <label className="role-picker">
-            Tryb podglądu
-            <select
-              value={admin ? 'admin' : 'student'}
-              onChange={(event) => {
-                window.location.hash =
-                  event.target.value === 'admin' ? 'UI-04' : 'UI-02';
-              }}
-            >
-              <option value="student">Student</option>
-              <option value="admin">Administrator</option>
-            </select>
-          </label>
-          <nav aria-label="Nawigacja podglądu">
+          <nav aria-label="Nawigacja RoomBook">
             <span className="eyebrow">
-              {admin ? 'Administracja · podgląd' : 'Student · podgląd'}
+              {session
+                ? admin
+                  ? 'Administrator · prototyp'
+                  : 'Student · rzeczywiste dane'
+                : 'Zaloguj się'}
             </span>
             {nav.map((item) => (
               <a
@@ -109,32 +128,52 @@ export function App() {
                 {item.short}
               </a>
             ))}
-            <a
-              className="login-link"
-              href="#UI-01"
-              aria-current={screen === 'UI-01' ? 'page' : undefined}
-            >
-              ↩ Ekran logowania
-            </a>
           </nav>
+          {session && (
+            <>
+              <p className="account-name">{session.user.displayName}</p>
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={async () => {
+                  if (logoutPending.current) return;
+                  logoutPending.current = true;
+                  setLoggingOut(true);
+                  setLogoutError('');
+                  try {
+                    await session.api.logout(session.controller.signal);
+                    if (!session.controller.signal.aborted) auth.ended();
+                  } catch (error) {
+                    if (!session.controller.signal.aborted)
+                      setLogoutError(errorMessage(error));
+                  } finally {
+                    logoutPending.current = false;
+                    if (!session.controller.signal.aborted)
+                      setLoggingOut(false);
+                  }
+                }}
+              >
+                {loggingOut ? 'Wylogowywanie…' : 'Wyloguj'}
+              </button>
+            </>
+          )}
+          <p role="alert">{logoutError}</p>
           <div className="sidebar-bottom">
             <span className="eyebrow">Projekt uczelniany</span>
             <p>
-              Etap 05 / 12
+              Etap 09 / 12
               <br />
-              Makiety i interfejs
-            </p>
-            <p>
-              Przełącznik roli służy prezentacji. Nie ustanawia sesji ani
-              uprawnień.
+              Frontend studenta
             </p>
           </div>
         </aside>
         <div className="workspace">
           <header className="topbar">
             <span className="demo-badge">
-              <i aria-hidden="true" /> Tryb demonstracyjny — bez logowania i
-              zapisu danych
+              <i aria-hidden="true" />
+              {admin
+                ? 'Administrator — prototyp do etapu 10'
+                : 'Student — rzeczywiste dane'}
             </span>
             <button
               className="theme-toggle"
@@ -149,56 +188,68 @@ export function App() {
               <div>
                 <p className="eyebrow">
                   {current.id} ·{' '}
-                  {admin
-                    ? 'Podgląd administratora'
-                    : screen === 'UI-01'
-                      ? 'Witaj w RoomBook'
-                      : 'Podgląd studenta'}
+                  {admin ? 'Prototyp administratora' : 'Witaj w RoomBook'}
                 </p>
                 <h2 ref={titleRef} tabIndex={-1}>
-                  {current.title}
+                  {auth.checking
+                    ? 'Sprawdzam sesję…'
+                    : auth.error
+                      ? 'Nie udało się sprawdzić sesji'
+                      : current.title}
                 </h2>
               </div>
               <span className="page-counter">{screen.slice(-2)} / 07</span>
             </div>
-            <div className="prototype-info">
-              <p>Funkcje biznesowe nie są jeszcze dostępne.</p>
-              <p>Dane fikcyjne · zegar demo: {demoClock} · Europe/Warsaw</p>
-            </div>
+            {admin && (
+              <div className="prototype-info">
+                <p>
+                  Administrator — prototyp do etapu 10. Działania
+                  demonstracyjne, bez zapisu.
+                </p>
+                <p>Dane fikcyjne · zegar demo: {demoClock} · Europe/Warsaw</p>
+              </div>
+            )}
             <div className="live-notice" role="status">
-              {notice && (
-                <div className="notice">
-                  {notice}
-                  <button
-                    aria-label="Zamknij komunikat"
-                    onClick={() => setNotice('')}
-                  >
-                    Zamknij ×
-                  </button>
-                </div>
-              )}
+              {auth.message || notice}
             </div>
-            <div key={screen} className="screen-content">
-              {screen === 'UI-01' && <Login showPreview={setPreview} />}
-              {screen === 'UI-02' && <Calendar showPreview={setPreview} />}
-              {screen === 'UI-03' && <Reservations showPreview={setPreview} />}
-              {screen === 'UI-04' && <Rooms showPreview={setPreview} />}
-              {screen === 'UI-05' && (
-                <Reservations admin showPreview={setPreview} />
-              )}
-              {screen === 'UI-06' && <Blocks showPreview={setPreview} />}
-              {screen === 'UI-07' && (
-                <StudentBooking showPreview={setPreview} />
-              )}
-            </div>
+            {auth.error && (
+              <div role="alert" className="notice">
+                <p>{auth.error}</p>
+                <button onClick={auth.retry}>Ponów sprawdzenie sesji</button>
+              </div>
+            )}
+            {!auth.checking && !auth.error && (
+              <div className="screen-content">
+                {!session && <Login onLogin={auth.accept} />}
+                {session && !admin && (
+                  <Student
+                    key={session.user.id}
+                    api={session.api}
+                    screen={screen}
+                  />
+                )}
+                {session && admin && (
+                  <div key={screen} className="screen-content">
+                    {screen === 'UI-04' && <Rooms showPreview={setPreview} />}
+                    {screen === 'UI-05' && (
+                      <AdminReservations admin showPreview={setPreview} />
+                    )}
+                    {screen === 'UI-06' && <Blocks showPreview={setPreview} />}
+                    {screen === 'UI-07' && (
+                      <StudentBooking showPreview={setPreview} />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <footer>
-              RoomBook · Projekt interfejsu P1 · Integracja z API w etapach
-              06–10.
+              RoomBook · Student — rzeczywiste dane · Administrator — prototyp
+              do etapu 10
             </footer>
           </main>
         </div>
       </div>
-      {preview && (
+      {session && admin && preview && (
         <PreviewDialog
           preview={preview}
           onClose={() => setPreview(null)}
