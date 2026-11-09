@@ -33,15 +33,15 @@ export function Login({ onLogin }: { onLogin: (user: UserDto) => void }) {
           <div>Przestrzeń do wspólnej pracy</div>
         </div>
         <p>
-          Student — rzeczywiste dane
+          Student — kalendarz i własne rezerwacje
           <br />
-          Administrator — prototyp do etapu 10
+          Administrator — sale, blokady i rezerwacje studentów
         </p>
       </section>
       <section className="card">
         <span className="eyebrow">UI-01 · Twoje konto</span>
         <h3>Logowanie do RoomBook</h3>
-        <p>Użyj danych konta przygotowanego lokalnie przez seed.</p>
+        <p>Użyj danych przygotowanego konta studenta lub administratora.</p>
         <form
           aria-busy={pending}
           onSubmit={async (event) => {

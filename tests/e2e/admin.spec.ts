@@ -268,7 +268,11 @@ test('rezerwacja dla studenta poza +14 dni i limitem 3; podgląd i anulowanie ad
   await page.getByRole('button', { name: 'Potwierdź anulowanie' }).click();
   await expect(row).toContainText('Anulowana');
   await row.getByText('Historia anulowania').click();
-  await expect(row).toContainText('ADMIN_CANCELLED');
+  await expect(row).toContainText('Anulowanie przez administratora');
+  expect(
+    (await bookings(request)).find((item) => item.id === booking.id)
+      ?.cancelReason,
+  ).toBe('ADMIN_CANCELLED');
   await expect(
     row.getByRole('button', { name: 'Anuluj rezerwację' }),
   ).toHaveCount(0);

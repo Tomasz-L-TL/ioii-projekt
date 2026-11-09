@@ -148,6 +148,9 @@ export function AdminRooms({ api }: { api: Api }) {
                 () => {
                   setEditor(null);
                   action.setNotice('Zapisano salę.');
+                  document
+                    .querySelector<HTMLElement>('.page-heading h2')
+                    ?.focus();
                 },
               );
             }}

@@ -17,6 +17,12 @@ const states = {
   COMPLETED: 'Zakończona',
   CANCELLED: 'Anulowana',
 };
+const reasons = {
+  STUDENT_CANCELLED: 'Anulowanie przez studenta',
+  ADMIN_CANCELLED: 'Anulowanie przez administratora',
+  ROOM_DEACTIVATED: 'Dezaktywacja sali',
+  TIME_BLOCKED: 'Blokada terminu',
+};
 export function AdminBookings({ api }: { api: Api }) {
   const [target, setTarget] = useState<AdminBookingDto | null>(null);
   const resource = useResource(api.bookings, 0, Boolean(target));
@@ -123,7 +129,9 @@ export function AdminBookings({ api }: { api: Api }) {
                         <details>
                           <summary>Historia anulowania</summary>
                           <p>
-                            {row.cancelReason}
+                            {row.cancelReason
+                              ? reasons[row.cancelReason]
+                              : 'Brak przyczyny'}
                             <br />
                             {row.cancelledBy?.displayName ??
                               `ID ${row.cancelledByUserId}`}

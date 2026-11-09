@@ -51,13 +51,13 @@ export function Feedback({
   action: ReturnType<typeof useAdminAction>;
 }) {
   return (
-    <>
+    <div hidden={!action.notice && !action.pending && !action.error}>
       <p role="status">
         {action.notice}
         {action.pending ? ' Trwa operacja…' : ''}
       </p>
       <p role="alert">{action.error}</p>
-    </>
+    </div>
   );
 }
 export function ResourceState({

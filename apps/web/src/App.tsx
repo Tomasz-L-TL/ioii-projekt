@@ -166,9 +166,11 @@ export function App() {
           <header className="topbar">
             <span className="demo-badge">
               <i aria-hidden="true" />
-              {admin
-                ? 'Administrator — rzeczywiste dane'
-                : 'Student — rzeczywiste dane'}
+              {!session
+                ? 'Rezerwacje sal uczelnianych'
+                : admin
+                  ? 'Panel administratora'
+                  : 'Panel studenta'}
             </span>
             <button
               className="theme-toggle"
