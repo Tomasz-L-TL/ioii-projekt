@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative } from 'node:path';
 import { promisify } from 'node:util';
@@ -31,6 +31,9 @@ export async function testDatabase(seed = true) {
     });
   };
   try {
+    // Silnik Prisma na Windows wymaga istniejącego pliku dla świeżej SQLite.
+    // Pusty plik nie omija migracji; cała struktura i CHECK nadal pochodzą z SQL.
+    await writeFile(join(directory, 'test.db'), '', { flag: 'wx' });
     await promisify(execFile)(
       process.execPath,
       [

@@ -5,7 +5,62 @@ import type {
   BookingInput,
   RoomDto,
   UserDto,
+  AdminRoomDto,
+  AdminBookingDto,
+  StudentDto,
+  BlockDto,
+  BlockInput,
+  ImpactDto,
+  Confirmation,
+  RoomInput,
+  ActorDto,
 } from './types';
+const isActor = (v: unknown): v is ActorDto =>
+  isRecord(v) &&
+  Number.isInteger(v.id) &&
+  typeof v.displayName === 'string' &&
+  ['STUDENT', 'ADMIN'].includes(String(v.role));
+const isAdminRoom = (v: unknown): v is AdminRoomDto =>
+  isRecord(v) &&
+  typeof v.isActive === 'boolean' &&
+  (v.description === null || typeof v.description === 'string') &&
+  isRoom(v);
+const isAdminBooking = (v: unknown): v is AdminBookingDto =>
+  isRecord(v) &&
+  isActor(v.student) &&
+  (v.cancelledBy === null || isActor(v.cancelledBy)) &&
+  isBooking(v);
+const isStudent = (v: unknown): v is StudentDto =>
+  isRecord(v) &&
+  Number.isInteger(v.id) &&
+  typeof v.email === 'string' &&
+  typeof v.displayName === 'string';
+const isBlock = (v: unknown): v is BlockDto =>
+  isRecord(v) &&
+  Number.isInteger(v.id) &&
+  Number.isInteger(v.roomId) &&
+  isAdminRoom(v.room) &&
+  typeof v.date === 'string' &&
+  Number.isInteger(v.startHour) &&
+  (v.durationSlots === 1 || v.durationSlots === 2) &&
+  (v.reason === null || typeof v.reason === 'string') &&
+  typeof v.createdAt === 'string' &&
+  isActor(v.createdBy);
+export const isImpact = (v: unknown): v is ImpactDto =>
+  isRecord(v) &&
+  Number.isInteger(v.roomId) &&
+  Number.isInteger(v.cancellationCount) &&
+  Array.isArray(v.expectedCancellationIds) &&
+  v.cancellationCount === v.expectedCancellationIds.length &&
+  v.expectedCancellationIds.every(
+    (id: unknown, i: number, ids: unknown[]) =>
+      typeof id === 'number' &&
+      Number.isInteger(id) &&
+      id > 0 &&
+      (i === 0 || id > (ids[i - 1] as number)),
+  ) &&
+  typeof v.confirmationToken === 'string' &&
+  v.confirmationToken.length > 0;
 export const isUser = (v: unknown): v is UserDto =>
   isRecord(v) &&
   Number.isInteger(v.id) &&
@@ -92,6 +147,67 @@ export function createApi(scope: AbortSignal, onUnauthorized: () => void) {
       onUnauthorized,
     });
   return {
+    adminRooms: (signal: AbortSignal) =>
+      get(
+        '/rooms',
+        (v): v is AdminRoomDto[] => Array.isArray(v) && v.every(isAdminRoom),
+        signal,
+      ),
+    students: (signal: AbortSignal) =>
+      get(
+        '/admin/students',
+        (v): v is StudentDto[] => Array.isArray(v) && v.every(isStudent),
+        signal,
+      ),
+    bookings: (signal: AbortSignal) =>
+      get(
+        '/admin/bookings',
+        (v): v is AdminBookingDto[] =>
+          Array.isArray(v) && v.every(isAdminBooking),
+        signal,
+      ),
+    blocks: (signal: AbortSignal) =>
+      get(
+        '/admin/blocks',
+        (v): v is BlockDto[] => Array.isArray(v) && v.every(isBlock),
+        signal,
+      ),
+    saveRoom: (
+      id: number | null,
+      body:
+        RoomInput | { isActive: true } | ({ isActive: false } & Confirmation),
+      signal: AbortSignal,
+    ) =>
+      request(
+        id === null ? '/admin/rooms' : `/admin/rooms/${id}`,
+        isAdminRoom,
+        {
+          body,
+          method: id === null ? 'POST' : 'PATCH',
+          signal: AbortSignal.any([scope, signal]),
+          onUnauthorized,
+        },
+      ),
+    deactivationPreview: (id: number, signal: AbortSignal) =>
+      get(`/admin/rooms/${id}/deactivation-preview`, isImpact, signal),
+    blockPreview: (body: BlockInput, signal: AbortSignal) =>
+      get(
+        `/admin/blocks/preview?${new URLSearchParams({ roomId: String(body.roomId), date: body.date, startHour: String(body.startHour), durationSlots: String(body.durationSlots), ...(body.reason === null ? {} : { reason: body.reason }) })}`,
+        isImpact,
+        signal,
+      ),
+    createBlock: (body: BlockInput & Confirmation, signal: AbortSignal) =>
+      post('/admin/blocks', body, isBlock, signal),
+    deleteBlock: (id: number, signal: AbortSignal) =>
+      request(`/admin/blocks/${id}`, (v): v is undefined => v === undefined, {
+        method: 'DELETE',
+        signal: AbortSignal.any([scope, signal]),
+        onUnauthorized,
+      }),
+    bookFor: (
+      body: BookingInput & { studentId: number },
+      signal: AbortSignal,
+    ) => post('/bookings', body, isBooking, signal),
     rooms: (signal: AbortSignal) =>
       get(
         '/rooms',

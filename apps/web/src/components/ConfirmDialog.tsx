@@ -7,6 +7,7 @@ export function ConfirmDialog({
   onClose,
   onConfirm,
   confirmLabel,
+  returnFocus,
 }: {
   title: string;
   children: ReactNode;
@@ -15,10 +16,11 @@ export function ConfirmDialog({
   onClose: () => void;
   onConfirm: () => void;
   confirmLabel: string;
+  returnFocus?: HTMLElement;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    const trigger = document.activeElement;
+    const trigger = returnFocus ?? document.activeElement;
     const dialog = ref.current!;
     dialog.showModal();
     dialog.querySelector('button')?.focus();

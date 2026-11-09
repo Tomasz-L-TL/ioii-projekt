@@ -10,6 +10,39 @@ export type RoomDto = {
   name: string | null;
   capacity: number;
 };
+export type AdminRoomDto = RoomDto & {
+  description: string | null;
+  isActive: boolean;
+};
+export type RoomInput = {
+  roomNumber: string;
+  name: string | null;
+  description: string | null;
+  capacity: number;
+};
+export type StudentDto = Pick<UserDto, 'id' | 'displayName' | 'email'>;
+export type ActorDto = Pick<UserDto, 'id' | 'displayName' | 'role'>;
+export type AdminBookingDto = BookingDto & {
+  student: ActorDto;
+  cancelledBy: ActorDto | null;
+};
+export type BlockInput = BookingInput & { reason: string | null };
+export type BlockDto = BlockInput & {
+  id: number;
+  room: AdminRoomDto;
+  createdAt: string;
+  createdBy: ActorDto;
+};
+export type ImpactDto = {
+  roomId: number;
+  cancellationCount: number;
+  expectedCancellationIds: number[];
+  confirmationToken: string;
+};
+export type Confirmation = Pick<
+  ImpactDto,
+  'expectedCancellationIds' | 'confirmationToken'
+> & { confirmed: true };
 export type SlotStatus =
   'AVAILABLE' | 'RESERVED' | 'BLOCKED' | 'INACTIVE' | 'PAST';
 export type SlotDto = {

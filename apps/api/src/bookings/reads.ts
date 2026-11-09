@@ -18,7 +18,9 @@ export class BookingReads {
         roomNumber: true,
         name: true,
         capacity: true,
-        ...(actor.role === 'ADMIN' ? { isActive: true } : {}),
+        ...(actor.role === 'ADMIN'
+          ? { isActive: true, description: true }
+          : {}),
       },
     });
   }

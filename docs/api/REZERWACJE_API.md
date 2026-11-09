@@ -10,7 +10,7 @@ Sesje i uruchamianie: [README](../../README.md). Wszystkie endpointy wymagają c
 [{ "id": 1, "roomNumber": "A-101", "name": "Sala projektowa", "capacity": 6 }]
 ```
 
-STUDENT widzi tylko aktywne sale, ADMIN wszystkie, z dodatkowym `isActive`. Brak query. Nazwa może być `null`.
+STUDENT widzi tylko aktywne sale, ADMIN wszystkie, z dodatkowymi `isActive` i `description` (nullable; od etapu 10 potrzebne do zachowania opisu przy edycji). DTO studenta pozostaje bez zmian. Brak query. Nazwa może być `null`.
 
 `GET /api/availability?roomId=1&weekStart=2026-11-02` wymaga dodatniego ID oraz rzeczywistej daty poniedziałku. Zwraca jeden snapshot sali, aktywnych rezerwacji i blokad, pięć dni oraz po 16 slotów:
 

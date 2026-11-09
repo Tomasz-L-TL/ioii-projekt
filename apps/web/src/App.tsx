@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { PreviewDialog, type Preview } from './components/Preview';
-import { demoClock, demoMessage, screens, type ScreenId } from './demo/data';
-import { Blocks, StudentBooking } from './screens/Administration';
+import { screens, type ScreenId } from './demo/data';
+import { AdminSchedule } from './screens/AdminSchedule';
 import { Login } from './screens/Login';
-import { Reservations as AdminReservations } from './screens/Reservations';
-import { Rooms } from './screens/Rooms';
+import { AdminBookings } from './screens/AdminBookings';
+import { AdminRooms } from './screens/AdminRooms';
 import { Student } from './screens/Student';
 import { useSession } from './useSession';
 import { errorMessage } from './api/client';
@@ -26,8 +25,6 @@ export function App() {
   const auth = useSession();
   const [requested, setRequested] = useState(readScreen);
   const [theme, setTheme] = useState(readTheme);
-  const [preview, setPreview] = useState<Preview | null>(null);
-  const [notice, setNotice] = useState('');
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const logoutPending = useRef(false);
@@ -53,14 +50,14 @@ export function App() {
   useEffect(() => {
     const change = () => {
       setRequested(readScreen());
-      setPreview(null);
-      setNotice('');
     };
     window.addEventListener('hashchange', change);
     return () => window.removeEventListener('hashchange', change);
   }, []);
   useEffect(() => {
     if (auth.checking || auth.error) return;
+    // Nie nadpisuj nawigacji, której hashchange nie zdążył jeszcze obsłużyć.
+    if (readScreen() !== requested) return;
     if (window.location.hash !== `#${screen}`)
       window.history.replaceState(null, '', `#${screen}`);
     setRequested(screen);
@@ -78,8 +75,6 @@ export function App() {
     }
   }, [theme]);
   useEffect(() => {
-    setPreview(null);
-    setNotice('');
     setLogoutError('');
     setLoggingOut(false);
     logoutPending.current = false;
@@ -112,7 +107,7 @@ export function App() {
             <span className="eyebrow">
               {session
                 ? admin
-                  ? 'Administrator · prototyp'
+                  ? 'Administrator · rzeczywiste dane'
                   : 'Student · rzeczywiste dane'
                 : 'Zaloguj się'}
             </span>
@@ -161,9 +156,9 @@ export function App() {
           <div className="sidebar-bottom">
             <span className="eyebrow">Projekt uczelniany</span>
             <p>
-              Etap 09 / 12
+              Etap 10 / 12
               <br />
-              Frontend studenta
+              Frontend administratora
             </p>
           </div>
         </aside>
@@ -172,7 +167,7 @@ export function App() {
             <span className="demo-badge">
               <i aria-hidden="true" />
               {admin
-                ? 'Administrator — prototyp do etapu 10'
+                ? 'Administrator — rzeczywiste dane'
                 : 'Student — rzeczywiste dane'}
             </span>
             <button
@@ -188,7 +183,7 @@ export function App() {
               <div>
                 <p className="eyebrow">
                   {current.id} ·{' '}
-                  {admin ? 'Prototyp administratora' : 'Witaj w RoomBook'}
+                  {admin ? 'Panel administratora' : 'Witaj w RoomBook'}
                 </p>
                 <h2 ref={titleRef} tabIndex={-1}>
                   {auth.checking
@@ -200,17 +195,8 @@ export function App() {
               </div>
               <span className="page-counter">{screen.slice(-2)} / 07</span>
             </div>
-            {admin && (
-              <div className="prototype-info">
-                <p>
-                  Administrator — prototyp do etapu 10. Działania
-                  demonstracyjne, bez zapisu.
-                </p>
-                <p>Dane fikcyjne · zegar demo: {demoClock} · Europe/Warsaw</p>
-              </div>
-            )}
             <div className="live-notice" role="status">
-              {auth.message || notice}
+              {auth.message}
             </div>
             {auth.error && (
               <div role="alert" className="notice">
@@ -229,36 +215,33 @@ export function App() {
                   />
                 )}
                 {session && admin && (
-                  <div key={screen} className="screen-content">
-                    {screen === 'UI-04' && <Rooms showPreview={setPreview} />}
-                    {screen === 'UI-05' && (
-                      <AdminReservations admin showPreview={setPreview} />
+                  <div
+                    key={`${session.user.id}-${screen}`}
+                    className="screen-content"
+                  >
+                    {screen === 'UI-04' && <AdminRooms api={session.api} />}
+                    {screen === 'UI-05' && <AdminBookings api={session.api} />}
+                    {screen === 'UI-06' && (
+                      <AdminSchedule
+                        api={session.api}
+                        block
+                        administrator={session.user.displayName}
+                      />
                     )}
-                    {screen === 'UI-06' && <Blocks showPreview={setPreview} />}
                     {screen === 'UI-07' && (
-                      <StudentBooking showPreview={setPreview} />
+                      <AdminSchedule
+                        api={session.api}
+                        administrator={session.user.displayName}
+                      />
                     )}
                   </div>
                 )}
               </div>
             )}
-            <footer>
-              RoomBook · Student — rzeczywiste dane · Administrator — prototyp
-              do etapu 10
-            </footer>
+            <footer>RoomBook · Rzeczywiste dane · Europe/Warsaw</footer>
           </main>
         </div>
       </div>
-      {session && admin && preview && (
-        <PreviewDialog
-          preview={preview}
-          onClose={() => setPreview(null)}
-          onConfirm={() => {
-            setPreview(null);
-            setNotice(demoMessage);
-          }}
-        />
-      )}
     </>
   );
 }

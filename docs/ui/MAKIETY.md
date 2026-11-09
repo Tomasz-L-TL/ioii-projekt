@@ -1,6 +1,6 @@
 # RoomBook — makiety etapu 05
 
-Siedem autorskich SVG przedstawia projekt P1, nie działający system rezerwacji. Wszystkie osoby i terminy są fikcyjne. Interaktywny podgląd uruchamia `npm run dev`; [nawigacja](NAWIGACJA.md) opisuje przejścia i docelowy dostęp. Podstawą są [specyfikacja, §10](../SPECYFIKACJA_ROOMBOOK.md#10-interfejs-i-nawigacja), [WF](../requirements/WYMAGANIA.md) i [UC](../use-cases/PRZYPADKI_UZYCIA.md).
+Siedem autorskich SVG przedstawia projekt P1, nie działający system rezerwacji. Wszystkie osoby i terminy są fikcyjne. Rzeczywistą aplikację uruchamia `npm run dev`; [nawigacja](NAWIGACJA.md) opisuje przejścia i docelowy dostęp. Podstawą są [specyfikacja, §10](../SPECYFIKACJA_ROOMBOOK.md#10-interfejs-i-nawigacja), [WF](../requirements/WYMAGANIA.md) i [UC](../use-cases/PRZYPADKI_UZYCIA.md).
 
 | UI    | Rola                   | Cel                                          | Powiązane UC/WF                          | Plik SVG                                                                |
 | ----- | ---------------------- | -------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
@@ -12,16 +12,18 @@ Siedem autorskich SVG przedstawia projekt P1, nie działający system rezerwacji
 | UI-06 | Administrator          | Blokady i skutki anulowań                    | UC-07; WF-14, WF-15                      | [Blokady](wireframes/UI-06-blokady-admin.svg)                           |
 | UI-07 | Administrator          | Wskazanie studenta i terminu                 | UC-02, UC-03; WF-02, WF-03, WF-05, WF-06 | [Rezerwacja dla studenta](wireframes/UI-07-rezerwacja-dla-studenta.svg) |
 
-## Makieta a implementacja etapu 09
+## Makieta a implementacja etapów 09–10
 
 Opisy ekranów i porównanie etapu 05 poniżej zachowano jako historię projektu. SVG nie zmieniano. Aktualny przepływ opisuje [nawigacja](NAWIGACJA.md).
 
-| Ekran    | Historyczna makieta                          | React w etapie 09                                                                                                          |
-| -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| UI-01    | Pola tylko do odczytu, przełączanie podglądu | Kontrolowane pola, POST login, cookie, GET me, prawdziwy logout, brak przełącznika roli                                    |
-| UI-02    | Stała data i fikcyjne zajętości              | Rzeczywiste aktywne sale, tygodnie Warszawy, snapshot API, 45/90 min, potwierdzenie i trwały zapis, konflikty i ponowienie |
-| UI-03    | Fikcyjny Student 01 i przykładowe anulowania | Własne DTO, stany serwera, trzy filtry, inicjator, potwierdzone anulowanie i zachowana historia                            |
-| UI-04…07 | Dane fikcyjne i działania bez zapisu         | Nadal prototyp do etapu 10; tylko dla zalogowanego ADMIN, bez wywołań biznesowego API                                      |
+| Ekran    | Historyczna makieta                          | React w etapach 09–10                                                                                                            |
+| -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| UI-01    | Pola tylko do odczytu, przełączanie podglądu | Kontrolowane pola, POST login, cookie, GET me, prawdziwy logout, brak przełącznika roli                                          |
+| UI-02    | Stała data i fikcyjne zajętości              | Rzeczywiste aktywne sale, tygodnie Warszawy, snapshot API, 45/90 min, potwierdzenie i trwały zapis, konflikty i ponowienie       |
+| UI-03    | Fikcyjny Student 01 i przykładowe anulowania | Własne DTO, stany serwera, trzy filtry, inicjator, potwierdzone anulowanie i zachowana historia                                  |
+| UI-04…07 | Dane fikcyjne i działania bez zapisu         | Rzeczywiste sale, kalendarz blokad, historia, tworzenie/anulowanie dla studentów; podgląd HMAC i potwierdzenie skutków przez API |
+
+Bieżąca integracja i testy: [raport etapu 10](../testing/ETAP_10_RAPORT.md). Poniższe opisy UI-01…07 zachowują historyczną makietę etapu 05, nie bieżący stan działania React.
 
 ## UI-01 — Logowanie
 

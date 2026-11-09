@@ -917,3 +917,35 @@ footer {
     padding: 7px 10px;
   }
 }
+
+/* Formularze administracji zachowują lokalne przewijanie na telefonie. */
+fieldset.form-grid {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+textarea {
+  font: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+.calendar-table td.available {
+  background: var(--surface);
+}
+.calendar-table td.inactive,
+.calendar-table td.past {
+  opacity: 0.75;
+}
+.screen-content .actions {
+  flex-wrap: wrap;
+}
+td small {
+  overflow-wrap: anywhere;
+}

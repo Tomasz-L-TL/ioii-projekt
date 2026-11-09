@@ -1,6 +1,9 @@
 import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
 
+const browserName =
+  process.env.PLAYWRIGHT_BROWSER === 'firefox' ? 'firefox' : 'chromium';
+
 const webPort = Number(process.env.WEB_PORT ?? 5173);
 const apiPort = Number(process.env.API_PORT ?? 3001);
 
@@ -16,10 +19,16 @@ export default defineConfig({
   use: { baseURL: `http://127.0.0.1:${webPort}`, trace: 'off' },
   projects: [
     {
-      name: process.env.PLAYWRIGHT_CHANNEL ?? 'chromium',
+      name:
+        browserName === 'firefox'
+          ? 'firefox'
+          : (process.env.PLAYWRIGHT_CHANNEL ?? 'chromium'),
       use: {
-        ...devices['Desktop Chrome'],
-        ...(process.env.PLAYWRIGHT_CHANNEL
+        ...devices[
+          browserName === 'firefox' ? 'Desktop Firefox' : 'Desktop Chrome'
+        ],
+        browserName,
+        ...(browserName === 'chromium' && process.env.PLAYWRIGHT_CHANNEL
           ? { channel: process.env.PLAYWRIGHT_CHANNEL }
           : {}),
       },

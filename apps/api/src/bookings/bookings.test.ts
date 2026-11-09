@@ -68,6 +68,27 @@ describe('Rezerwacje API na migrowanym pliku SQLite', () => {
     await fixture?.close();
   });
 
+  it('administrator odczytuje opis sali do edycji, student otrzymuje dotychczasowy DTO', async () => {
+    await fixture.db.room.update({
+      where: { id: 1 },
+      data: { description: 'Zachowany opis' },
+    });
+    const admin = await request(app)
+      .get('/api/rooms')
+      .set('Cookie', cookie(1))
+      .expect(200);
+    expect(
+      admin.body.find((room: { id: number }) => room.id === 1),
+    ).toMatchObject({ description: 'Zachowany opis', isActive: true });
+    const student = await request(app)
+      .get('/api/rooms')
+      .set('Cookie', cookie(2))
+      .expect(200);
+    expect(
+      student.body.find((room: { id: number }) => room.id === 1),
+    ).not.toHaveProperty('description');
+  });
+
   it('TC-05: 45 minut od 07 zajmuje jeden slot; zapisuje ACTIVE i prawdziwe ID', async () => {
     const response = await post().expect(201);
     expect(response.body).toMatchObject({

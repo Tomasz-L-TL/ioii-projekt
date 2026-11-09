@@ -13,14 +13,19 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 export async function request<T>(
   path: string,
   decode: (value: unknown) => value is T,
-  options: { signal: AbortSignal; body?: object; onUnauthorized?: () => void },
+  options: {
+    signal: AbortSignal;
+    body?: object;
+    method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+    onUnauthorized?: () => void;
+  },
 ): Promise<T> {
   const signal = AbortSignal.any([options.signal, AbortSignal.timeout(15_000)]);
   let response: Response;
   let value: unknown;
   try {
     response = await fetch(`/api${path}`, {
-      method: options.body === undefined ? 'GET' : 'POST',
+      method: options.method ?? (options.body === undefined ? 'GET' : 'POST'),
       credentials: 'same-origin',
       signal,
       ...(options.body === undefined

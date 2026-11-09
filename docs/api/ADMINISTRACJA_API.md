@@ -1,6 +1,6 @@
 # RoomBook — API administracji (etap 08)
 
-Uruchamianie i logowanie: [README](../../README.md). Wszystkie `/api/admin/*` wymagają aktualnej sesji ADMIN: bez niej 401, STUDENT 403 również dla podglądów i zgadniętych ID. Mutacje ponownie odczytują rolę w transakcji. Brak zarządzania kontami, usuwania sal, przywracania anulowań i integracji React (etap 10).
+Uruchamianie i logowanie: [README](../../README.md). Wszystkie `/api/admin/*` wymagają aktualnej sesji ADMIN: bez niej 401, STUDENT 403 również dla podglądów i zgadniętych ID. Mutacje ponownie odczytują rolę w transakcji. Brak zarządzania kontami, usuwania sal i przywracania anulowań. Integracja React UI-04…07 działa od etapu 10; [nawigacja](../ui/NAWIGACJA.md) opisuje przepływy.
 
 POST/PATCH wymagają `application/json`, maksymalnie 4 KiB, poprawnego Origin/Fetch Metadata jak rezerwacje. DELETE wymaga tej samej ochrony źródła, ale **nie przyjmuje body i nie wymaga Content-Type**. GET nie wymaga Origin/Content-Type. Nieznane pola/query są odrzucane. Jedyną trasą administracji przyjmującą query jest podgląd blokady. Błędy: `{"error":{"code":"…","message":"…"}}`, bez SQL i sekretów.
 

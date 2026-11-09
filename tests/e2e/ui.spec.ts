@@ -135,7 +135,7 @@ test('kalendarz 5 × 16, prawdziwe stany, sale i czytanie poza horyzontem', asyn
   await login(page);
   await goToWeek(page, data.date);
   await expect(page.getByLabel('Aktywna sala').locator('option')).toHaveCount(
-    8,
+    data.rooms.length,
   );
   await expect(page.locator('.calendar-table tbody tr')).toHaveCount(16);
   await expect(slot(page, data.date, 7)).toHaveAccessibleName(/Zarezerwowany/);
@@ -243,23 +243,14 @@ test('klawiatura: login, 45/90 min, potwierdzenie, anulowanie i wolny termin', a
   await expect(slot(page, data.date, 11)).toHaveAccessibleName(/Wolny/);
 });
 
-test('rzeczywisty ADMIN widzi tylko prototyp bez wywołań biznesowych UI', async ({
-  page,
-}) => {
-  const calls: string[] = [];
-  page.on('request', (r) => {
-    const path = new URL(r.url()).pathname;
-    if (path.startsWith('/api/') && !path.startsWith('/api/auth/'))
-      calls.push(path);
-  });
+test('ADMIN widzi rzeczywiste dane i chronioną nawigację', async ({ page }) => {
   await login(page, 'admin@roombook.test');
+  await expect(page.locator('[data-room-id]').first()).toBeVisible();
   for (const hash of ['UI-04', 'UI-05', 'UI-06', 'UI-07']) {
     await page.goto(`/#${hash}`);
-    await expect(page.locator('.prototype-info')).toContainText(
-      'prototyp do etapu 10',
-    );
+    await expect(page.locator('.page-heading h2')).toBeVisible();
+    await expect(page.locator('.prototype-info')).toHaveCount(0);
   }
-  expect(calls).toEqual([]);
   await page.getByRole('button', { name: 'Wyloguj', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Zaloguj', exact: true }),
@@ -283,7 +274,9 @@ test('siedem ekranów według ról, 375/1280 px i oba motywy bez przewijania str
           : ['UI-02', 'UI-03']) {
           await page.goto(`/#${screen}`);
           await expect(page.locator('.page-heading h2')).toBeVisible();
-          if (screen === 'UI-02')
+          if (screen === 'UI-04')
+            await expect(page.locator('[data-room-id]').first()).toBeVisible();
+          if (screen === 'UI-02' || screen === 'UI-06' || screen === 'UI-07')
             await expect(page.locator('.calendar-table td')).toHaveCount(80);
           await expect(page.locator('html')).toHaveAttribute(
             'data-theme',
