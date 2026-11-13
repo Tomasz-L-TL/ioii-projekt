@@ -16,6 +16,8 @@
     "build": "npm run build --workspaces",
     "test": "vitest run",
     "test:e2e": "tsx tests/run-e2e.ts",
+    "test:e2e:firefox": "npm run test:e2e -- --engine=firefox",
+    "test:perf": "tsx tests/performance/run.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces && tsc --project tsconfig.tools.json",
@@ -28,7 +30,8 @@
     "prebuild": "npm run db:generate",
     "pretypecheck": "npm run db:generate",
     "pretest": "npm run db:generate",
-    "pretest:e2e": "npm run db:generate"
+    "pretest:e2e": "npm run db:generate",
+    "pretest:perf": "npm run db:generate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
