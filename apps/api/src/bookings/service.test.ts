@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { testDatabase } from '../testing/database.js';
 import { createDatabase } from '../db/client.js';
@@ -35,7 +35,7 @@ describe('Transakcyjne reguły przy wstrzykiwanym zegarze i prawdziwej SQLite', 
     fixture.db.booking.create({
       data: { ...input(extra), studentId: 2, createdByUserId: 2 },
     });
-  beforeAll(async () => {
+  beforeEach(async () => {
     fixture = await testDatabase();
     second = await createDatabase(fixture.databaseUrl);
   });
@@ -45,7 +45,7 @@ describe('Transakcyjne reguły przy wstrzykiwanym zegarze i prawdziwej SQLite', 
     await fixture.db.booking.deleteMany();
     await fixture.db.room.updateMany({ data: { isActive: true } });
   });
-  afterAll(async () => {
+  afterEach(async () => {
     await second?.$disconnect();
     await fixture?.close();
   });

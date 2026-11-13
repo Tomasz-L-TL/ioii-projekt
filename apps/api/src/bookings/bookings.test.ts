@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../app.js';
 import { createDatabase } from '../db/client.js';
 import { testDatabase } from '../testing/database.js';
@@ -45,7 +45,7 @@ describe('Rezerwacje API na migrowanym pliku SQLite', () => {
       .query({ roomId, weekStart: monday() })
       .set('Cookie', cookie(user));
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     fixture = await testDatabase();
     second = await createDatabase(fixture.databaseUrl);
     const options = {
@@ -63,7 +63,7 @@ describe('Rezerwacje API na migrowanym pliku SQLite', () => {
     await fixture.db.timeBlock.deleteMany();
     await fixture.db.room.updateMany({ data: { isActive: true } });
   });
-  afterAll(async () => {
+  afterEach(async () => {
     await second?.$disconnect();
     await fixture?.close();
   });

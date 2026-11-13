@@ -114,9 +114,11 @@ test('dezaktywacja: te same liczby i inne ID wymagają nowego podglądu i zgody'
     confirmed: true,
     expectedCancellationIds: [second.id],
   });
-  expect(response.request().postDataJSON().confirmationToken).not.toBe(
-    preview.confirmationToken,
-  );
+  expect(
+    response.request().postDataJSON().confirmationToken !==
+      preview.confirmationToken,
+    'Po zmianie skutków wymagany jest nowy podpis',
+  ).toBe(true);
   await expect(row).toContainText('Nieaktywna');
   await row.getByRole('button', { name: 'Aktywuj', exact: true }).click();
   await page.getByRole('button', { name: 'Potwierdź aktywację' }).click();
@@ -175,7 +177,12 @@ test('blokada 120 minut: podgląd dokładnych parametrów, anulowania, usunięci
     .click();
   const response = await saved;
   expect(response.status()).toBe(201);
-  expect(response.request().postDataJSON()).toEqual({
+  const { confirmationToken, ...payload } = response.request().postDataJSON();
+  expect(
+    confirmationToken === preview.confirmationToken,
+    'Podpis zgodny z podglądem',
+  ).toBe(true);
+  expect(payload).toEqual({
     roomId: room.id,
     date: data.date,
     startHour: 10,
@@ -183,7 +190,6 @@ test('blokada 120 minut: podgląd dokładnych parametrów, anulowania, usunięci
     reason: 'Remont & sprawdzenie',
     confirmed: true,
     expectedCancellationIds: [booking.id],
-    confirmationToken: preview.confirmationToken,
   });
   const block = (await response.json()) as { id: number };
   const row = page.locator(`[data-block-id="${block.id}"]`);

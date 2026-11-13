@@ -1,7 +1,7 @@
 import { createHmac, randomBytes } from 'node:crypto';
 import express from 'express';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../app.js';
 import { testDatabase } from '../testing/database.js';
 import { readEnv } from '../config/env.js';
@@ -17,7 +17,7 @@ describe('API auth na rzeczywistym adapterze SQLite', () => {
   let fixture: Awaited<ReturnType<typeof testDatabase>>;
   let app: Awaited<ReturnType<typeof createApp>>['app'];
   let roleApp: express.Express;
-  beforeAll(async () => {
+  beforeEach(async () => {
     fixture = await testDatabase();
     const created = await createApp({
       db: fixture.db,
@@ -44,7 +44,7 @@ describe('API auth na rzeczywistym adapterze SQLite', () => {
     );
     roleApp.use(errorHandler);
   });
-  afterAll(async () => {
+  afterEach(async () => {
     await fixture?.close();
   });
 

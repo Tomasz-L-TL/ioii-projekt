@@ -67,9 +67,13 @@ test('blokada: nowa kolizja po podglądzie wymaga nowej zgody i wiąże zmienion
     .click();
   const response = await saved;
   expect(response.status()).toBe(201);
-  expect(response.request().postDataJSON()).toMatchObject({
+  const { confirmationToken, ...payload } = response.request().postDataJSON();
+  expect(
+    confirmationToken === preview.confirmationToken,
+    'Podpis zgodny z podglądem',
+  ).toBe(true);
+  expect(payload).toMatchObject({
     reason: 'Nowy powód & kontrola',
-    confirmationToken: preview.confirmationToken,
     expectedCancellationIds: [booking.id],
   });
 });
@@ -190,7 +194,9 @@ test('audyt wizualny: rzeczywiste widoki, brak błędów JS, desktop i telefon',
         await expect(page.locator('.calendar-table td')).toHaveCount(80);
       expect(
         await page.evaluate(
-          () => document.documentElement.scrollWidth <= window.innerWidth,
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
         ),
       ).toBe(true);
       if (testInfo.project.name === 'chromium')

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { randomBytes } from 'node:crypto';
 import { testDatabase } from '../testing/database.js';
 import { seedDemo } from './seed.js';
@@ -8,10 +8,10 @@ import { normalizeEmail, normalizeRoomNumber } from '../auth/normalization.js';
 
 describe('Pierwsza migracja, fizyczna SQLite i atomowy seed', () => {
   let fixture: Awaited<ReturnType<typeof testDatabase>>;
-  beforeAll(async () => {
+  beforeEach(async () => {
     fixture = await testDatabase();
   });
-  afterAll(async () => {
+  afterEach(async () => {
     await fixture?.close();
   });
 

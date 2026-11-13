@@ -267,6 +267,8 @@ test('siedem ekranów według ról, 375/1280 px i oba motywy bez przewijania str
       await page.goto('/');
       if ((await page.locator('html').getAttribute('data-theme')) !== theme)
         await page.getByRole('button', { name: /Włącz .* motyw/ }).click();
+      await page.reload();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
       for (const role of ['student', 'admin']) {
         await login(page, role === 'admin' ? 'admin@roombook.test' : undefined);
         for (const screen of role === 'admin'
@@ -282,9 +284,17 @@ test('siedem ekranów według ról, 375/1280 px i oba motywy bez przewijania str
             'data-theme',
             theme,
           );
+          await page.reload();
+          await expect(page.locator('.page-heading h2')).toBeVisible();
+          await expect(page.locator('html')).toHaveAttribute(
+            'data-theme',
+            theme,
+          );
           expect(
             await page.evaluate(
-              () => document.documentElement.scrollWidth <= window.innerWidth,
+              () =>
+                document.documentElement.scrollWidth <=
+                document.documentElement.clientWidth,
             ),
             `${screen}, ${theme}, ${width}px`,
           ).toBe(true);
@@ -295,9 +305,12 @@ test('siedem ekranów według ról, 375/1280 px i oba motywy bez przewijania str
         await expect(
           page.getByRole('button', { name: 'Zaloguj', exact: true }),
         ).toBeVisible();
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
         expect(
           await page.evaluate(
-            () => document.documentElement.scrollWidth <= window.innerWidth,
+            () =>
+              document.documentElement.scrollWidth <=
+              document.documentElement.clientWidth,
           ),
         ).toBe(true);
       }

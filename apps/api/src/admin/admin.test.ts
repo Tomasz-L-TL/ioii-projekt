@@ -423,6 +423,21 @@ describe('Administracja TC-15…21 — rzeczywiste SQLite i sesje HTTP', () => {
     await block(fresh, { reason: 'Remont' }).expect(201);
   });
 
+  it.each(['room', 'block'])(
+    'TC-18/19: wygasły token przez HTTP nie zmienia fizycznej SQLite: %s',
+    async (kind) => {
+      await record();
+      const p = kind === 'room' ? await roomPreview() : await preview();
+      const before = await snapshot();
+      vi.setSystemTime(new Date(instant.getTime() + ImpactConfirmation.ttlMs));
+      const response = await (kind === 'room' ? deactivate(p) : block(p));
+      expect(response.status).toBe(409);
+      expect(response.headers['content-type']).toMatch(/application\/json/u);
+      expect(response.body.error.code).toBe('PREVIEW_STALE');
+      expect(await snapshot()).toEqual(before);
+    },
+  );
+
   it('TC-19/20: dwa sloty, tylko kolizje, BLOCKED, usunięcie i nowa rezerwacja', async () => {
     const a = await record({ startHour: 9, durationSlots: 2 });
     const b = await record({ startHour: 11, studentId: 3 });
