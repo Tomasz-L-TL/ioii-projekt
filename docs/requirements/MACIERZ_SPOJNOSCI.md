@@ -4,7 +4,26 @@ Podstawa: [specyfikacja 1.0](../SPECYFIKACJA_ROOMBOOK.md), rozdziały 7, 10–12
 
 **AD-01…AD-03 istnieją jako źródła PlantUML i eksporty SVG; SD-01…03, klasy, ERD i szkic Prisma istnieją jako projekty etapu 04. UI-01…07 istnieją jako [makiety i prezentacyjny frontend etapu 05](../ui/MAKIETY.md). Etap 06 wdrożył cztery modele, migrację, seed oraz auth. Etap 07 wdrożył backend sal/dostępności i rezerwacji z testami TC-05…14; etap 08 dodaje backend administracji i TC-15…21. Etap 09 integruje UI-01…03 z API; etap 10 integruje UI-04…07 z rzeczywistym API.** Identyfikatory TC-01…TC-26 zachowują znaczenie z rozdziału 11 specyfikacji. Wyniki wykonanych kontroli podano osobno poniżej; docelowa tabela WF pozostaje planem również dla UI. Dodatkowe powiązania TC-13/14/15 z WF-15 dotyczą prywatności i autoryzacji.
 
-## Stan implementacji etapu 10 — administrator
+## Weryfikacja etapu 11 — 2026-11-11
+
+Aktualne dowody i statusy każdego TC: [tabela przypadków](../tests/PRZYPADKI_TESTOWE.md), polecenia i ograniczenia: [raport QA](../tests/RAPORT_QA.md). Poniższe sekcje etapów 06–10 zachowują znaczenie historyczne i nie stanowią nowego pomiaru.
+
+| WF/WN               | UC                  | UI / API                                     | TC i wykonanie etapu 11                                                                           |
+| ------------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| WF-01, WF-15        | UC-01, UC-04…08     | UI-01…07; auth, chronione trasy, własność ID | TC-01/02/13/14/15/21/22 — API i E2E, w tym 401/403/404, reload i logout                           |
+| WF-02, WF-03        | UC-02               | UI-02/04/06/07; rooms, availability          | TC-03/04/06/12 — role sal, 5×16 i stany                                                           |
+| WF-04, WF-05, WF-06 | UC-03               | UI-02/07; POST bookings                      | TC-05…12 — sloty, limity, DST, konflikty i dwa połączenia SQLite                                  |
+| WF-07, WF-08        | UC-04/05            | UI-03; bookings/mine, cancel                 | TC-13/14/15 — prywatność i historia                                                               |
+| WF-09, WF-10        | UC-08               | UI-05; admin/bookings, cancel                | TC-15/16 — właściciele, inicjatorzy, anulowanie                                                   |
+| WF-11, WF-12, WF-13 | UC-06               | UI-04; admin/rooms, deactivation-preview     | TC-17/18 — walidacja, HMAC, atomowość, stale i rollback                                           |
+| WF-14               | UC-07               | UI-06; admin/blocks, preview, DELETE         | TC-12/19/20 — 1/2 sloty i nieodtwarzanie anulowań                                                 |
+| WN-01               | UC-01 i przekrojowo | auth/DB/DTO                                  | TC-22 — bcrypt i kontrola sesji; dodatkowo TC-01/21                                               |
+| WN-02               | UC-02               | availability / fizyczna SQLite               | TC-23 — [osobny pełny pomiar i jego status](../tests/WYDAJNOSC.md), smoke nie jest wynikiem WN-02 |
+| WN-03               | UC-01…08            | UI-01…07                                     | TC-24 — PARTIAL; automatyczne ścieżki klawiatury, ręczna używalność otwarta                       |
+| WN-04               | UC-01…08            | UI-01…07 / oba silniki                       | TC-25 — PARTIAL; brak niezależnego wyniku lokalnych stabilnych Chrome/Firefox                     |
+| WN-05               | UC-01…08            | UI-01…07, oba motywy                         | TC-26 — PARTIAL; geometria/reload automatyczne, pełna kontrola ręczna otwarta                     |
+
+## Historyczny stan implementacji etapu 10 — administrator
 
 | WF / UC / UI / TC                             | Kod i zachowanie                                                                                                                | Weryfikacja                                                                                                |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |

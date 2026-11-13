@@ -136,6 +136,8 @@ npm.cmd exec -- vitest run apps/api/src/admin/admin.test.ts
 
 ## Kontrola jakości
 
+Etap 11: [tabela TC-01…26](docs/tests/PRZYPADKI_TESTOWE.md), [raport QA](docs/tests/RAPORT_QA.md), [wydajność WN-02](docs/tests/WYDAJNOSC.md) i [protokół ręczny](docs/tests/PROTOKOL_RECZNY.md). Raport odróżnia lokalne silniki Playwright od stabilnych instalacji przeglądarek oraz od niewykonanego zdalnego CI.
+
 ```powershell
 npm.cmd run lint
 npm.cmd run typecheck
@@ -144,7 +146,14 @@ npm.cmd run build
 npm.cmd run db:validate
 npm.cmd audit
 npm.cmd audit --omit=dev
+npm.cmd exec -- playwright install chromium firefox
+npm.cmd run test:e2e
+npm.cmd run test:e2e:firefox
+npm.cmd run test:perf -- --smoke
+npm.cmd run test:perf
 ```
+
+Ostatnie polecenie mierzy pełne **600 s**, po osobnym warm-up, z 1200 rezerwacjami i 10 odrębnymi sesjami HTTP. Smoke trwa 15 s i nie zalicza WN-02. Perf tworzy własną bazę i sekret; odmawia przy ustawionym w procesie `DATABASE_URL`. Nie wymaga lokalnego `.env`. Nie uruchamiaj pomiaru razem z innymi testami. Zredagowane statystyki trafiają do ignorowanego `test-results/performance-summary.json`; w repo pozostaje raport Markdown. Runner E2E sam wybiera dwa porty i nie używa istniejących serwerów. Jeden worker zachowuje kolejność mutacji wspólnej tymczasowej bazy E2E.
 
 Vitest/Supertest sprawdza auth, role, cookie, błędne wejścia, migrację, FK/CHECK/indeksy, idempotencję i rollback seeda oraz TC-05…14: czas Warszawy/DST, terminy 45/90, limity, konflikty sali/studenta/blokad, historię i anulowanie. Równoległe HTTP na dwóch klientach jednego pliku SQLite sprawdza kolizje, limit i pojedyncze anulowanie; test utrzymywanej blokady potwierdza rzeczywisty konflikt zapisu. Każda grupa integracyjna migruje oddzielny plik tymczasowy, używa losowego sekretu/hasła w pamięci, zamyka połączenia i usuwa pliki. Testy nie używają prywatnej lokalnej bazy ani daty makiet; granice czasu sprawdzają usługi z wstrzykiwanym zegarem.
 
@@ -154,7 +163,7 @@ Kontrola etapu 08: Node 24.20.0, npm 11.19.1, Prisma 7.10.1; **162/162 testy PAS
 
 Kontrola etapu 07 odbyła się na Node 24.20.0 i npm 12.2.1 (ostrzeżenie o deklarowanym npm 11). `npm ci` odtworzyło lockfile. npm 12 zablokował skrypty instalacyjne; brakujący moduł natywny odtworzono przez `npm.cmd rebuild better-sqlite3 --dangerously-allow-all-scripts` (tylko wskazany pakiet), bez zmian manifestów i polityki projektu. Zalecane pozostaje środowisko npm 11 z instrukcji. Audit zgłosił 3 podatności: body-parser (high), fast-uri i qs (moderate); nie wykonywano automatycznej aktualizacji. Lokalny Chromium Playwright nie jest zainstalowany, więc E2E nie wykonano.
 
-`build` tworzy `apps/web/dist` i `apps/api/dist`. Start zbudowanego API: `npm.cmd run start --workspace @roombook/api`. CI instaluje lockfile, generuje klienta przed importami, sprawdza lint, typy, schemat, testy i build; nie wymaga sekretów lokalnych ani przeglądarek. Audit jest informacyjny: wcześniejsze zgłoszenia wysokiego poziomu dotyczyły drzewa Prisma CLI. Nie uruchamiaj automatycznie `audit fix --force` ani nie zmieniaj głównych wersji Prisma.
+`build` tworzy `apps/web/dist` i `apps/api/dist`. Start zbudowanego API: `npm.cmd run start --workspace @roombook/api`. CI instaluje lockfile, generuje klienta przed importami, sprawdza lint, typy, schemat, testy i build. Osobny job z macierzą Chromium/Firefox instaluje wymagane silniki Playwright i wykonuje E2E na izolowanej bazie, bez lokalnych sekretów. Nie uruchamia 10-minutowego perf ani nie przesyła śladów sieci. Zdalny wynik wymaga rzeczywistego przebiegu GitHub Actions. Nie uruchamiaj automatycznie `audit fix --force` ani nie zmieniaj głównych wersji Prisma.
 
 Playwright aktualizuje testy demonstracji do rzeczywistych sesji. [Scenariusze UI](tests/e2e/ui.spec.ts) i [studenta](tests/e2e/student.spec.ts) sprawdzają zapis 45/90 min, anulowanie i prywatność, 409/422/401, błędy odczytu i logout, role, klawiaturę, motyw oraz 375/1280 px. Runner tworzy unikalną migrowaną bazę tymczasową z zasianymi kontami i salami, losowym hasłem przekazanym wyłącznie do środowiska Node/Playwright i losowym sekretem. Jeden worker i cleanup przez API zapobiegają wyścigom scenariuszy. Po zakończeniu serwerów baza jest usuwana. Ślady sieci są wyłączone, aby nie utrwalać hasła. Runner oczekuje na health API przez proxy. Przy dostępnym Chromium:
 
@@ -162,7 +171,7 @@ Playwright aktualizuje testy demonstracji do rzeczywistych sesji. [Scenariusze U
 npm.cmd run test:e2e
 ```
 
-Można użyć już zainstalowanego Edge: `$env:PLAYWRIGHT_CHANNEL = 'msedge'`, następnie `npm.cmd run test:e2e`. Po testach usuń zmienną: `Remove-Item Env:PLAYWRIGHT_CHANNEL`. Opcjonalna instalacja `npx.cmd playwright install chromium` wymaga sieci i osobnej decyzji. Można użyć `PLAYWRIGHT_BROWSERS_PATH` na innym dysku, zachowując tę samą wartość podczas instalacji i testów. Porty muszą być wolne. Wynik Edge nie jest wynikiem Chrome/Firefox. Administracja funkcjonalna, test obciążenia i rozszerzenie CI pozostają etapami 10/11. Artefakty błędów: ignorowany `test-results/`.
+Można użyć już zainstalowanego Edge: `$env:PLAYWRIGHT_CHANNEL = 'msedge'`, następnie `npm.cmd run test:e2e`. Po testach usuń zmienną: `Remove-Item Env:PLAYWRIGHT_CHANNEL`. Instalacja silników Playwright wymaga sieci i miejsca w lokalnym cache. Można użyć `PLAYWRIGHT_BROWSERS_PATH` na innym dysku, zachowując tę samą wartość podczas instalacji i testów. Wynik Edge nie jest wynikiem Chrome/Firefox; Chromium Playwright również nie dowodzi zgodności lokalnego stabilnego Chrome. Artefakty błędów: ignorowany `test-results/`.
 
 Historyczna kontrola etapu 09 (2026-11-02, Windows, Node 24.20.0, npm 11.19.0): **173/173 Vitest PASS** (162 backendowe bez zmian + 11 frontendowych), **14/14 E2E PASS w Microsoft Edge** z rzeczywistym API i SQLite. Wykonano `db:generate`, `db:validate`, `lint`, `typecheck` i `build`. Pełny `npm audit`: **11 moderate** w narzędziach developerskich (minimatch i zależne narzędzia ESLint), kod 1; `audit --omit=dev`: **0 podatności**. Zależności nie były zmieniane. Nie instalowano przeglądarek; Chrome/Firefox i GitHub Actions niezweryfikowane. Powyższe wyniki opisują wyłącznie etap 09; bieżące wyniki zawiera raport etapu 10.
 
@@ -201,6 +210,6 @@ npm.cmd audit
 npm.cmd audit --omit=dev
 ```
 
-Domyślnie E2E korzysta z Chromium. `PLAYWRIGHT_CHANNEL=msedge` lub `chrome` nadal działa dla rodziny Chromium; Firefox wybiera `PLAYWRIGHT_BROWSER=firefox` i pomija kanał Chromium. Testy korzystają wyłącznie z własnej tymczasowej SQLite. Konfiguracja CI nadal uruchamia lint/typy/walidację/testy Vitest/build; E2E obu przeglądarek wykonano lokalnie.
+Domyślnie E2E korzysta z Chromium. `PLAYWRIGHT_CHANNEL=msedge` lub `chrome` nadal działa dla rodziny Chromium; Firefox wybiera `PLAYWRIGHT_BROWSER=firefox` lub skrypt `test:e2e:firefox` i pomija kanał Chromium. Testy korzystają wyłącznie z własnej tymczasowej SQLite. Bieżącą konfigurację CI i wyniki etapu 11 opisuje [raport QA](docs/tests/RAPORT_QA.md); poniższe uwagi o zmianie minimatch pochodzą z audytu etapu 10.
 
 `overrides.minimatch=11.0.1` usuwa podatność narzędzi developerskich GHSA-g3hv-75wg-m249 bez wymuszonego cofania ESLint i TypeScript ESLint. Jest to świadome nadpisanie głównej wersji pośredniej biblioteki; zweryfikowano npm ci, cały lint, typy, build i regresję. Należy je ponownie ocenić po przejściu zależności nadrzędnych na poprawioną wersję. Nie zmieniono zależności produkcyjnych.
